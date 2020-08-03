@@ -1,0 +1,4 @@
+name: pulsar-io-jdbc
+description: Pulsar IO JDBC
+sinkClass: com.boxuegu.basis.pulsar.jdbc.JdbcSink
+sinkConfigClass: com.boxuegu.basis.pulsar.jdbc.JdbcSinkConfig
