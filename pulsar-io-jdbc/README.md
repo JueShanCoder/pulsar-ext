@@ -18,30 +18,30 @@ $ ./bin/pulsar-admin sinks localrun --name local-jdbc-sink --retain-ordering --p
 
 | JDBC Type                      | Java Type                 | JSON Type | Format        | Sample / Range                                          | H2   | MySQL           | MariaDB         | PostgreSQL      |
 | ------------------------------ | ------------------------- | --------- | ------------- | ------------------------------------------------------- | ---- | --------------- | --------------- | --------------- |
-| `BIT(1)`                       | `java.lang.Boolean`       | `boolean` |               | `true`, `false`                                         | ✔    | ✔               | ✔               | ✘[^dt_pg_bit1]  |
-| `BOOLEAN`                      | `java.lang.Boolean`       | `boolean` |               | `true`, `false`                                         | ✔    | ✔               | ✔               | ✔               |
-| `TINYINT`                      | `java.lang.Byte`          | `number`  |               | `-128`, `127`                                           | ✔    | ✔               | ✔               | ✔               |
-| `TINYNT UNSIGNED`              | `java.lang.Short`         | `number`  |               | `0`, `255`                                              | ✘    | ✔               | ✔               | ✘               |
-| `SMALLINT`                     | `java.lang.Short`         | `number`  |               | `-32768`, `32767`                                       | ✔    | ✔               | ✔               | ✔               |
-| `SMALLINT UNSIGNED`            | `java.lang.Short`         | `number`  |               | `0`, `65535`                                            | ✘    | ✔               | ✔               | ✘               |
-| `INTEGER`                      | `java.lang.Integer`       | `number`  |               | `-2147483648`, `2147483647`                             | ✔    | ✔               | ✔               | ✔               |
-| `INTEGER UNSIGNED`             | `java.lang.Long`          | `number`  |               | `0`, `4294967295`                                       | ✘    | ✔               | ✔               | ✘               |
-| `BIGINT`                       | `java.lang.Long`          | `number`  |               | `-9223372036854775808`, `9223372036854775807`           | ✔    | ✔               | ✔               | ✔               |
-| `BIGINT UNSIGNED`              | `java.math.BigInteger`    | `number`  |               | `0`, `18446744073709551615`                             | ✘    | ✔               | ✔               | ✘               |
-| `FLOAT`                        | `java.lang.Float`         | `number`  |               | `1.4e-45`, `3.4028235e+38`                              | ✔    | ✘[^dt_m*_float] | ✘[^dt_m*_float] | ✔               |
-| `REAL`[^dt_*_real]             | `java.lang.Double`        | `number`  |               | `2.2250738585072014E-308`, `1.7976931348623157e+308`    | ✔    | ✔               | ✔               | ✔               |
-| `DOUBLE`                       | `java.lang.Double`        | `number`  |               | `2.2250738585072014E-308`, `1.7976931348623157e+308`    | ✔    | ✔               | ✔               | ✔               |
-| `NUMERIC(m, d)`[^dt_*_decimal] | `java.math.BigDecimal`    | `number`  |               | `-2.7182818284590452354`, `3.14159265358979323846`      | ✔    | ✔               | ✔               | ✔               |
-| `DECIMAL(m, d)`                | `java.math.BigDecimal`    | `number`  |               | `-2.7182818284590452354`, `3.14159265358979323846`      | ✔    | ✔               | ✔               | ✔               |
-| `CHAR(n)`                      | `java.lang.String`        | `string`  |               | `"Hello, World."`                                       | ✔    | ✔               | ✔               | ✔               |
-| `VARCHAR(n)`                   | `java.lang.String`        | `string`  |               | `"Hello, World."`                                       | ✔    | ✔               | ✔               | ✔               |
-| `LONGVARCHAR(n)`               | `java.lang.String`        | `string`  |               | `"Hello, World."`                                       | ✔    | ✔               | ✔               | ✘[^dt_pg_text]  |
-| `BINARY(n)`                    | `java.lang.Byte[]`        | `string`  | Base64Encoded | `"SGVsbG8sIFdvcmxkLg=="`                                | ✔    | ✔               | ✔               | ✔               |
-| `VARBINARY(n)`                 | `java.lang.Byte[]`        | `string`  | Base64Encoded | `"SGVsbG8sIFdvcmxkLg=="`                                | ✔    | ✔               | ✔               | ✘[^dt_pg_bytea] |
-| `LONGVARBINARY(n)`             | `java.lang.Byte[]`        | `string`  | Base64Encoded | `"SGVsbG8sIFdvcmxkLg=="`                                | ✔    | ✔               | ✔               | ✘[^dt_pg_bytea] |
-| `DATE`                         | `java.time.LocalDate`     | `string`  | ISO-8601      | `"2020-04-02"`                                          | ✔    | ✔               | ✔               | ✔               |
-| `TIME`                         | `java.time.LocalTime`     | `string`  | ISO-8601      | `"09:17:46"`, `"10:05:33.123456"`                       | ✔    | ✔               | ✔               | ✔               |
-| `TIMESTAMP`                    | `java.time.LocalDateTime` | `string`  | ISO-8601      | `"2020-04-02T09:17:46"`, `"2020-04-02T10:05:33.123456"` | ✔    | ✔               | ✔               | ✔               |
+| `BIT(1)`                       | `java.lang.Boolean`       | `boolean` |               | `true`, `false`                                         | ✓    | ✓               | ✓               | ✗[^dt_pg_bit1]  |
+| `BOOLEAN`                      | `java.lang.Boolean`       | `boolean` |               | `true`, `false`                                         | ✓    | ✓               | ✓               | ✓               |
+| `TINYINT`                      | `java.lang.Byte`          | `number`  |               | `-128`, `127`                                           | ✓    | ✓               | ✓               | ✓               |
+| `TINYNT UNSIGNED`              | `java.lang.Short`         | `number`  |               | `0`, `255`                                              | ✗    | ✓               | ✓               | ✗               |
+| `SMALLINT`                     | `java.lang.Short`         | `number`  |               | `-32768`, `32767`                                       | ✓    | ✓               | ✓               | ✓               |
+| `SMALLINT UNSIGNED`            | `java.lang.Short`         | `number`  |               | `0`, `65535`                                            | ✗    | ✓               | ✓               | ✗               |
+| `INTEGER`                      | `java.lang.Integer`       | `number`  |               | `-2147483648`, `2147483647`                             | ✓    | ✓               | ✓               | ✓               |
+| `INTEGER UNSIGNED`             | `java.lang.Long`          | `number`  |               | `0`, `4294967295`                                       | ✗    | ✓               | ✓               | ✗               |
+| `BIGINT`                       | `java.lang.Long`          | `number`  |               | `-9223372036854775808`, `9223372036854775807`           | ✓    | ✓               | ✓               | ✓               |
+| `BIGINT UNSIGNED`              | `java.math.BigInteger`    | `number`  |               | `0`, `18446744073709551615`                             | ✗    | ✓               | ✓               | ✗               |
+| `FLOAT`                        | `java.lang.Float`         | `number`  |               | `1.4e-45`, `3.4028235e+38`                              | ✓    | ✗[^dt_m*_float] | ✗[^dt_m*_float] | ✓               |
+| `REAL`[^dt_*_real]             | `java.lang.Double`        | `number`  |               | `2.2250738585072014E-308`, `1.7976931348623157e+308`    | ✓    | ✓               | ✓               | ✓               |
+| `DOUBLE`                       | `java.lang.Double`        | `number`  |               | `2.2250738585072014E-308`, `1.7976931348623157e+308`    | ✓    | ✓               | ✓               | ✓               |
+| `NUMERIC(m, d)`[^dt_*_decimal] | `java.math.BigDecimal`    | `number`  |               | `-2.7182818284590452354`, `3.14159265358979323846`      | ✓    | ✓               | ✓               | ✓               |
+| `DECIMAL(m, d)`                | `java.math.BigDecimal`    | `number`  |               | `-2.7182818284590452354`, `3.14159265358979323846`      | ✓    | ✓               | ✓               | ✓               |
+| `CHAR(n)`                      | `java.lang.String`        | `string`  |               | `"Hello, World."`                                       | ✓    | ✓               | ✓               | ✓               |
+| `VARCHAR(n)`                   | `java.lang.String`        | `string`  |               | `"Hello, World."`                                       | ✓    | ✓               | ✓               | ✓               |
+| `LONGVARCHAR(n)`               | `java.lang.String`        | `string`  |               | `"Hello, World."`                                       | ✓    | ✓               | ✓               | ✗[^dt_pg_text]  |
+| `BINARY(n)`                    | `java.lang.Byte[]`        | `string`  | Base64Encoded | `"SGVsbG8sIFdvcmxkLg=="`                                | ✓    | ✓               | ✓               | ✓               |
+| `VARBINARY(n)`                 | `java.lang.Byte[]`        | `string`  | Base64Encoded | `"SGVsbG8sIFdvcmxkLg=="`                                | ✓    | ✓               | ✓               | ✗[^dt_pg_bytea] |
+| `LONGVARBINARY(n)`             | `java.lang.Byte[]`        | `string`  | Base64Encoded | `"SGVsbG8sIFdvcmxkLg=="`                                | ✓    | ✓               | ✓               | ✗[^dt_pg_bytea] |
+| `DATE`                         | `java.time.LocalDate`     | `string`  | ISO-8601      | `"2020-04-02"`                                          | ✓    | ✓               | ✓               | ✓               |
+| `TIME`                         | `java.time.LocalTime`     | `string`  | ISO-8601      | `"09:17:46"`, `"10:05:33.123456"`                       | ✓    | ✓               | ✓               | ✓               |
+| `TIMESTAMP`                    | `java.time.LocalDateTime` | `string`  | ISO-8601      | `"2020-04-02T09:17:46"`, `"2020-04-02T10:05:33.123456"` | ✓    | ✓               | ✓               | ✓               |
 
 [^dt_pg_bit1]: PostgreSQL中`BIT(1)`字段类型会被映射为`JDBCType.BIT`，用于表示定长位数二进制数值。
 
