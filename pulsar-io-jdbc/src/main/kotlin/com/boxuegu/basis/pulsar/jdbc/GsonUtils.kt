@@ -21,3 +21,5 @@ class TemporalAdapter : JsonSerializer<Temporal>, JsonDeserializer<Temporal> {
         }
     }
 }
+
+fun GsonBuilder.registerTemporalAdapter(): GsonBuilder = this.registerTypeHierarchyAdapter(Temporal::class.java, TemporalAdapter())

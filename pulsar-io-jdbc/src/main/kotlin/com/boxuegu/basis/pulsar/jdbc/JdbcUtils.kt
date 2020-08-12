@@ -150,6 +150,9 @@ private fun Connection.p(table: JdbcTable): String = table.keys.joinToString { "
 //endregion
 
 fun Connection.buildSQL(target: String, action: JdbcAction, entity: JsonElement): String {
+    if (action == JdbcAction.SCHEMA) {
+        return entity.asJsonObject.get("ddl").asString
+    }
     val table = metaData.loadTable(target)
     val fields = entity.asJsonObject.entrySet().filter { table.hasColumn(it.key) }
     val nonKeys = fields.filterNot { table.isKey(it.key) }
@@ -184,7 +187,9 @@ fun Connection.buildSQL(target: String, action: JdbcAction, entity: JsonElement)
             "DELETE FROM ${t(table)} WHERE ${p(table)}"
         }
 
-        JdbcAction.SCHEMA -> TODO()
+        JdbcAction.SCHEMA -> { // Never
+            ""
+        }
     }
 }
 
@@ -231,6 +236,9 @@ fun PreparedStatement.setParams(args: List<JdbcField>, offset: Int = 0) = args.f
 }
 
 fun PreparedStatement.bindValue(target: String, action: JdbcAction, entity: JsonElement) {
+    if (action == JdbcAction.SCHEMA) {
+        return
+    }
     val table = connection.metaData.loadTable(target)
     val fields = table.parseFields(entity)
     val keys = fields.filter(JdbcField::isKey)
@@ -266,6 +274,7 @@ fun PreparedStatement.bindValue(target: String, action: JdbcAction, entity: Json
             setParams(keys)
         }
 
-        JdbcAction.SCHEMA -> TODO()
+        JdbcAction.SCHEMA -> { // Never
+        }
     }
 }

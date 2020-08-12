@@ -2,7 +2,6 @@ package com.boxuegu.basis.pulsar.jdbc
 
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonElement
-import com.mysql.cj.jdbc.ClientPreparedStatement
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
@@ -11,12 +10,14 @@ import java.sql.Connection
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
-import java.time.temporal.Temporal
 import java.util.logging.Logger
 
 abstract class JdbcUtilsTests {
-    private val gson = GsonBuilder().registerTypeHierarchyAdapter(Temporal::class.java, TemporalAdapter()).create()
-    protected val logger = Logger.getGlobal()!!
+    companion object {
+        private val LOGGER = Logger.getGlobal()!!
+        private val GSON = GsonBuilder().registerTemporalAdapter().create()
+    }
+
     protected lateinit var connection: Connection
 
     @BeforeMethod
@@ -36,22 +37,22 @@ abstract class JdbcUtilsTests {
 
     open fun cleanup() {}
 
-    protected fun testAction(target: String, action: JdbcAction, entity: JsonElement) {
+    private fun testAction(target: String, action: JdbcAction, entity: JsonElement) {
         connection.buildSQL(target, action, entity).also {
-            logger.info("STATEMENT: $it")
+            LOGGER.info("STATEMENT: $it")
         }.let {
             connection.prepareStatement(it)
         }.also {
             it.bindValue(target, action, entity)
-            logger.info("RESULT: ${it.executeUpdate()}")
+            LOGGER.info("RESULT: ${it.executeUpdate()}")
         }
     }
 
-    protected fun testAction(target: String, action: JdbcAction, entity: Map<String, Any>) = testAction(target, action, gson.toJsonTree(entity))
+    private fun testAction(target: String, action: JdbcAction, entity: Map<String, Any>) = testAction(target, action, GSON.toJsonTree(entity))
 
     @Test
     fun testActions() {
-        logger.info("TABLE: ${connection.metaData.loadTable("samples")}")
+        LOGGER.info("TABLE: ${connection.metaData.loadTable("samples")}")
         testAction("samples", JdbcAction.INSERT, mapOf(
                 "id" to 1,
                 "f_boolean" to false,
