@@ -27,7 +27,7 @@ data class JdbcColumn(
         val type: Int,
         val isKey: Boolean,
         val nullable: Boolean,
-        val unsigned: Boolean
+        val unsigned: Boolean,
 ) {
     override fun toString(): String {
         return "JdbcColumn(name='$name', type=${JDBCType.valueOf(type).name}, isKey=$isKey, nullable=$nullable, unsigned=$unsigned)"
@@ -69,11 +69,11 @@ data class JdbcTable(
         val catalog: String,
         val schema: String,
         val name: String,
-        val columns: List<JdbcColumn>
+        val columns: List<JdbcColumn>,
 ) {
     val keys: List<JdbcColumn> by lazy { columns.filter(JdbcColumn::isKey) }
 
-    fun isKey(c: String): Boolean = keys.any { it.name == c }
+    fun hasKey(c: String): Boolean = keys.any { it.name == c }
 
     fun hasColumn(c: String): Boolean = columns.any { it.name == c }
 
@@ -86,7 +86,7 @@ data class JdbcField(
         val name: String,
         val type: Int,
         val isKey: Boolean,
-        val value: Any?
+        val value: Any?,
 
 ) {
     override fun toString(): String {
@@ -155,7 +155,7 @@ fun Connection.buildSQL(target: String, action: JdbcAction, entity: JsonElement)
     }
     val table = metaData.loadTable(target)
     val fields = entity.asJsonObject.entrySet().filter { table.hasColumn(it.key) }
-    val nonKeys = fields.filterNot { table.isKey(it.key) }
+    val nonKeys = fields.filterNot { table.hasKey(it.key) }
     return when (action) {
         JdbcAction.INSERT -> {
             "INSERT INTO ${t(table)} (${fields.joinToString { q(it.key) }}) VALUES (${fields.joinToString { "?" }})"
@@ -199,8 +199,6 @@ fun PreparedStatement.setDate(index: Int, date: LocalDate) = setDate(index, java
 fun PreparedStatement.setTime(index: Int, time: LocalTime) = setTime(index, Time.valueOf(time))
 fun PreparedStatement.setTimestamp(index: Int, datetime: LocalDateTime) = setTimestamp(index, Timestamp.valueOf(datetime))
 
-//endregion
-
 fun PreparedStatement.setParam(index: Int, field: JdbcField) {
     if (field.value == null) setNull(index, field.type) else when (field.type) {
         Types.BIT,
@@ -234,6 +232,8 @@ fun PreparedStatement.setParam(index: Int, field: JdbcField) {
 fun PreparedStatement.setParams(args: List<JdbcField>, offset: Int = 0) = args.forEachIndexed { index, field ->
     setParam(1 + index + offset, field)
 }
+
+//endregion
 
 fun PreparedStatement.bindValue(target: String, action: JdbcAction, entity: JsonElement) {
     if (action == JdbcAction.SCHEMA) {

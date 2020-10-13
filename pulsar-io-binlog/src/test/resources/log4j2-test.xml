@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT" follow="true">
+            <!-- https://github.com/spring-projects/spring-boot/blob/v2.3.3.RELEASE/spring-boot-project/spring-boot/src/main/resources/org/springframework/boot/logging/log4j2/log4j2.xml -->
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} %5p %pid --- [%15.15t] %-30.30c{1.} : %m%n"/>
+        </Console>
+    </Appenders>
+    <Loggers>
+        <Logger name="com.boxuegu.basis.pulsar" level="debug"/>
+        <Root level="info">
+            <AppenderRef ref="Console"/>
+        </Root>
+    </Loggers>
+</Configuration>

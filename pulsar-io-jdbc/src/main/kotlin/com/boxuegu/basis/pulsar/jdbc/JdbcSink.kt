@@ -20,7 +20,7 @@ class JdbcSink : Sink<ByteArray> {
     private lateinit var connection: Connection
     private lateinit var sinkConfig: JdbcSinkConfig
 
-    override fun open(config: MutableMap<String, Any>, context: SinkContext) {
+    override fun open(config: MutableMap<String, Any?>, context: SinkContext) {
         sinkConfig = config.toJdbcSinkConfig().also { it.validate() }
         Class.forName(sinkConfig.driver)
         connection = DriverManager.getConnection(sinkConfig.jdbcUrl, sinkConfig.username, sinkConfig.password).also {

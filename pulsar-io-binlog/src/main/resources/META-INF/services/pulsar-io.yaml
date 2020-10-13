@@ -1,5 +1,5 @@
-name: pulsar-io-jdbc
-description: Pulsar IO JDBC
+name: pulsar-io-binlog
+description: Pulsar IO Binlog
 sourceClass: com.boxuegu.basis.pulsar.binlog.BinlogSource
 sourceConfigClass: com.boxuegu.basis.pulsar.binlog.BinlogSourceConfig
 sinkClass: com.boxuegu.basis.pulsar.binlog.BinlogSink
