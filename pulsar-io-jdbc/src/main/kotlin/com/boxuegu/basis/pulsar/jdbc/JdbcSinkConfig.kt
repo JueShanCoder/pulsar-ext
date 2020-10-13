@@ -30,7 +30,7 @@ data class JdbcSinkConfig(
                 defaultValue = "",
                 help = "JDBC URL of the database"
         )
-        val jdbcUrl: String = ""
+        val jdbcUrl: String = "",
 )
 
 fun JdbcSinkConfig.validate() {
@@ -42,7 +42,7 @@ fun JdbcSinkConfig.validate() {
     }
 }
 
-fun Map<String, Any>.toJdbcSinkConfig(): JdbcSinkConfig {
+fun Map<String, Any?>.toJdbcSinkConfig(): JdbcSinkConfig {
     return Gson().let {
         it.fromJson(it.toJsonTree(this), JdbcSinkConfig::class.java)
     }
