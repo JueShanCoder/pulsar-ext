@@ -22,3 +22,17 @@ fun SourceContext.getBinlogOffset(key: String): BinlogOffset? {
 fun SourceContext.putBinlogOffset(key: String, offset: BinlogOffset) {
     this.putState(key, ByteBuffer.wrap(GSON.toJson(offset).encodeToByteArray()))
 }
+
+fun BinlogSourceConfig.getBinlogOffset(): BinlogOffset? {
+    return when {
+        this.offsetGtidSet.isNotEmpty() -> {
+            BinlogOffset(gtidSet = this.offsetGtidSet)
+        }
+        this.offsetFilename.isNotEmpty() -> {
+            BinlogOffset(this.offsetFilename, this.offsetPosition)
+        }
+        else -> {
+            null
+        }
+    }
+}

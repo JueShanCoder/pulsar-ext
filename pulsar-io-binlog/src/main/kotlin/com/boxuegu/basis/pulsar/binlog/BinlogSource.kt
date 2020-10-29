@@ -27,13 +27,16 @@ class BinlogSource : PushSource<ByteArray>(), BinaryLogClient.EventListener {
     private lateinit var binlogClient: BinaryLogClient
     private lateinit var connectFuture: Future<Unit>
     private lateinit var nextOffset: BinlogOffset
+    private lateinit var dbMatchers: List<String>
     private val pendingEvents: MutableList<Event> = LinkedList()
 
     private val executor: ExecutorService = Executors.newSingleThreadExecutor()
 
     override fun open(config: Map<String, Any?>, context: SourceContext) {
+
         sourceContext = context
         sourceConfig = config.toBinlogSourceConfig().also { it.validate() }
+        dbMatchers = sourceConfig.databases.split(',')
 
         // Create jdbc connection
         Class.forName("com.mysql.cj.jdbc.Driver")
@@ -44,13 +47,16 @@ class BinlogSource : PushSource<ByteArray>(), BinaryLogClient.EventListener {
                         "&yearIsDateType=false&tinyInt1isBit=false&disableMariaDbDriver=true",
         ).also { it.isReadOnly = true } // Readonly connection
 
+        sourceContext.putState(BINLOG_OFFSET_STATE_KEY, null)
         // Load server status
         nextOffset = sourceContext.getBinlogOffset(BINLOG_OFFSET_STATE_KEY)?.also {
             LOGGER.info("Loaded offset from state: $it")
+        } ?: sourceConfig.getBinlogOffset()?.also {
+            LOGGER.info("Loaded offset from config: $it")
+            sourceContext.putBinlogOffset(BINLOG_OFFSET_STATE_KEY, it)
         } ?: connection.loadBinlogOffset().also {
             LOGGER.info("Loaded offset from mysql: $it")
             sourceContext.putBinlogOffset(BINLOG_OFFSET_STATE_KEY, it)
-            LOGGER.info("Reload offset from state: ${sourceContext.getBinlogOffset(BINLOG_OFFSET_STATE_KEY)}")
         }
 
         connection.close()
@@ -164,8 +170,14 @@ class BinlogSource : PushSource<ByteArray>(), BinaryLogClient.EventListener {
             EventType.EXT_UPDATE_ROWS,
             EventType.DELETE_ROWS,
             EventType.EXT_DELETE_ROWS -> {
-                LOGGER.info("Handling DML event: $event")
-                pendingEvents.add(event)
+                val data = event.getData<DmlEventData>()
+                if (dbMatchers.contains(data.database)) {
+                    LOGGER.info("Handling DML event: $event")
+                    pendingEvents.add(event)
+                    commit()
+                } else {
+                    LOGGER.info("Ignoring DML event: $event")
+                }
             }
             EventType.QUERY -> {
                 val data = event.getData<QueryEventData>()
@@ -178,9 +190,13 @@ class BinlogSource : PushSource<ByteArray>(), BinaryLogClient.EventListener {
                     }
                     // TODO: DDL Filter
                     else -> {
-                        LOGGER.info("Handling DDL event: $event")
-                        pendingEvents.add(Event(event.getHeader(), DdlEventData(data.database, data.sql)))
-                        commit()
+                        if (dbMatchers.contains(data.database)) {
+                            LOGGER.info("Handling DDL event: $event")
+                            pendingEvents.add(Event(event.getHeader(), DdlEventData(data.database, data.sql)))
+                            commit()
+                        } else {
+                            LOGGER.info("Ignoring DDL event: $event")
+                        }
                     }
                 }
             }
@@ -199,9 +215,7 @@ class BinlogSource : PushSource<ByteArray>(), BinaryLogClient.EventListener {
 
     private fun commit() {
         val offset = nextOffset.copy()
-        if (LOGGER.isDebugEnabled) {
-            LOGGER.debug("Committing transaction: \n\t$offset\n\t${pendingEvents.joinToString(separator = "\n\t") { it.toString() }}")
-        }
+        LOGGER.info("Committing transaction: \n\t$offset\n\t${pendingEvents.joinToString(separator = "\n\t") { it.toString() }}")
         val events = pendingEvents.toTypedArray()
         pendingEvents.clear()
         consume(BinlogRecord(events) {

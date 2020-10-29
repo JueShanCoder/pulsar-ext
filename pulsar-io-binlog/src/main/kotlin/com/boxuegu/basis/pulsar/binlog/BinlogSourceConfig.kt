@@ -37,6 +37,30 @@ data class BinlogSourceConfig(
                 help = "Timezone of mysql client connections",
         )
         val timezone: String = "GMT",
+
+        @FieldDoc(
+                defaultValue = "",
+                help = "Comma-separated list of databases to be monitored",
+        )
+        val databases: String = "",
+
+        @FieldDoc(
+                defaultValue = "",
+                help = "Binlog filename of initial binlog offset",
+        )
+        val offsetFilename: String = "",
+
+        @FieldDoc(
+                defaultValue = "",
+                help = "Binlog position of initial binlog offset",
+        )
+        val offsetPosition: Long = 4L,
+
+        @FieldDoc(
+                defaultValue = "",
+                help = "GTID set of initial binlog offset",
+        )
+        val offsetGtidSet: String = "",
 ) {
     fun validate() {
         if (hostname.isEmpty()) {
@@ -51,6 +75,9 @@ data class BinlogSourceConfig(
                 "username" to this.username,
                 "password" to this.password,
                 "timezone" to this.timezone,
+                "offsetFilename" to this.offsetFilename,
+                "offsetPosition" to this.offsetPosition,
+                "offsetGtidSet" to this.offsetGtidSet,
         )
     }
 }
