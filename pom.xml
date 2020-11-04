@@ -21,6 +21,7 @@
         <pulsar.version>2.6.1</pulsar.version>
         <slf4j.version>1.7.30</slf4j.version>
         <log4j.version>2.13.3</log4j.version>
+        <antlr.version>4.8</antlr.version>
         <kotlin.version>1.4.10</kotlin.version>
         <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
         <kotlinx.version>1.4.0</kotlinx.version>
@@ -83,9 +84,14 @@
                 <version>${log4j.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.antlr</groupId>
+                <artifactId>antlr4-runtime</artifactId>
+                <version>${antlr.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.zendesk</groupId>
                 <artifactId>mysql-binlog-connector-java</artifactId>
-                <version>0.23.2</version>
+                <version>0.23.3</version>
             </dependency>
             <dependency>
                 <groupId>com.h2database</groupId>
