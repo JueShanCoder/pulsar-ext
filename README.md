@@ -7,4 +7,4 @@
 - pulsar-io-jdbc
 - pulsar-io-binlog
 - pulsar-io-zhugeio
-- pulsar-io-sevenmoor
+- pulsar-io-qimoor
