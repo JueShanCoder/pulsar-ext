@@ -46,9 +46,6 @@ public class QiMoorSource extends PushSource<byte[]> {
     private String stateKey;
     private String apiAdapterUrl;
     private String qimoorSourceTopicName;
-    private String offsetBeginTime;
-    private String timeDiff;
-    private Boolean isOpenTimeDiff;
     private String collectQimoor;
 
     private static final ExecutorService executorService;
@@ -68,6 +65,9 @@ public class QiMoorSource extends PushSource<byte[]> {
     @SuppressWarnings("InfiniteLoopStatement")
     public void open(Map<String, Object> config, SourceContext sourceContext) {
         Gson gson = GsonBuilderUtil.create(false);
+        String offsetBeginTime;
+        String timeDiff;
+        Boolean isOpenTimeDiff;
         try {
             idWorker = new IdWorker(((Double) config.get("snowflake-cluster-id")).longValue(), ((Double) config.get("snowflake-worker-id")).longValue());
             apiAdapterUrl = (String) config.get("api-adapter.url");
