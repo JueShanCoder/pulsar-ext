@@ -70,7 +70,7 @@ public class QiMoorSource extends PushSource<byte[]> {
         Boolean isOpenTimeDiff;
         try {
             idWorker = new IdWorker(((Double) config.get("snowflake-cluster-id")).longValue(), ((Double) config.get("snowflake-worker-id")).longValue());
-            apiAdapterUrl = (String) config.get("api-adapter.url");
+            apiAdapterUrl = (String) config.get("api-adapter-url");
             qimoorSourceTopicName = (String) config.get("qimoor-source-topic-name");
             offsetBeginTime = (String) config.get("offset-begin-time");
             timeDiff = (String) config.get("time-difference");

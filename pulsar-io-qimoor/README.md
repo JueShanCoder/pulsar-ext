@@ -32,9 +32,7 @@ name: "pulsar-qimoor-source"
 topicName: "pulsar-io-qimoor"
 archive: "connectors/pulsar-io-qimoor-1.0.0-SNAPSHOT.nar"
 parallelism: 1
-# processingGuarantees: "EFFECTIVELY_ONCE"
 configs:
-  ## PULSAR_SERVICE_URL_CONFIG
   pulsar.service.url: "pulsar://127.0.0.1:6650"
   snowflake-cluster-id: 0
   snowflake-worker-id: 0
@@ -117,7 +115,6 @@ tenant: "public"
 namespace: "default"
 name: "unCloseSessionFunction"
 jar: "connectors/pulsar-io-qimoor-1.0.0-SNAPSHOT.jar"
-# processingGuarantees: "EFFECTIVELY_ONCE"
 inputs: ["persistent://public/default/un-close-session-topic"]
 className: "com.boxuegu.basis.pulsar.qimoor.function.UnCloseSessionFunction"
 user-config:
@@ -154,7 +151,6 @@ tenant: "public"
 namespace: "default"
 name: "webChatMsgFunction"
 jar: "connectors/pulsar-io-qimoor-1.0.0-SNAPSHOT.jar"
-# processingGuarantees: "EFFECTIVELY_ONCE"
 inputs: ["persistent://public/default/close-session-topic"]
 className: "com.boxuegu.basis.pulsar.qimoor.function.WebChatMsgFunction"
 user-config:
