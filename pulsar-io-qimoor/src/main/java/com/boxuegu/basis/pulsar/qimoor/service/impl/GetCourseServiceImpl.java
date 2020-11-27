@@ -9,7 +9,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
-import static com.boxuegu.basis.pulsar.qimoor.service.impl.JdbcServiceImpl.*;
+import static com.boxuegu.basis.pulsar.qimoor.service.impl.JdbcServiceImpl.closeSession;
+import static com.boxuegu.basis.pulsar.qimoor.service.impl.JdbcServiceImpl.convertResultToEntity;
 
 @Slf4j
 public class GetCourseServiceImpl implements GetObjectService {
@@ -19,21 +20,21 @@ public class GetCourseServiceImpl implements GetObjectService {
         PreparedStatement preparedStatement = null;
         ResultSet row = null;
         RemoteCourse remoteCourse = null;
-        try{
+        try {
             preparedStatement = connection.prepareStatement(sql);
             row = preparedStatement.executeQuery();
             while (row.next()) {
                 // map to entity
                 remoteCourse = convertResultToEntity(row, RemoteCourse.class);
             }
-        }finally {
-            closeSession(connection,row,preparedStatement);
+        } finally {
+            closeSession(connection, row, preparedStatement);
         }
-        log.info(" remoteCourse entity is {}",new Gson().toJson(remoteCourse));
+        log.info(" remoteCourse entity is {}", new Gson().toJson(remoteCourse));
         return remoteCourse;
     }
 
-    public static String getRemoteCourseSQL(Integer id){
+    public static String getRemoteCourseSQL(Integer id) {
         return "SELECT\n" +
                 "\t`grade_name`,\n" +
                 "\t`menu_id`,\n" +
@@ -43,6 +44,6 @@ public class GetCourseServiceImpl implements GetObjectService {
                 "FROM\n" +
                 "\t`d_bxg`.`oe_course` \n" +
                 "WHERE\n" +
-                "\t`id` = '"+id+"'";
+                "\t`id` = '" + id + "'";
     }
 }

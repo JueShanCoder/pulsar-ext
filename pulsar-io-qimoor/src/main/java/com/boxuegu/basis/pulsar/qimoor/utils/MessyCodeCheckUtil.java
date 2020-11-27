@@ -9,6 +9,7 @@ public class MessyCodeCheckUtil {
 
     /**
      * 判断字符串是否是乱码
+     *
      * @return true-是乱码
      */
     public static boolean isMessyCode(String str) {

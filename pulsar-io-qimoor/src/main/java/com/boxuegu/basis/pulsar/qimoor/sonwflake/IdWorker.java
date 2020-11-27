@@ -5,8 +5,9 @@ public class IdWorker {
     public static final long DEFAULT_TWEPOCH = 1577836800000L;
 
     public IdWorker(long clusterId, long workerId) throws IllegalAccessException {
-        this(clusterId, workerId,5L , 5L, 12L,DEFAULT_TWEPOCH );
+        this(clusterId, workerId, 5L, 5L, 12L, DEFAULT_TWEPOCH);
     }
+
     public IdWorker(long clusterId, long workerId, long clusterIdBits, long workerIdBits, long sequenceBits, long twepoch) throws IllegalAccessException {
         this.clusterId = clusterId;
         this.workerId = workerId;

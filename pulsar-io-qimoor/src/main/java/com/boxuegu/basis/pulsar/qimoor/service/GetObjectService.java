@@ -4,6 +4,6 @@ import java.sql.Connection;
 
 public interface GetObjectService {
 
-    Object getObject(Connection connection,String sql) throws Exception;
+    Object getObject(Connection connection, String sql) throws Exception;
 
 }

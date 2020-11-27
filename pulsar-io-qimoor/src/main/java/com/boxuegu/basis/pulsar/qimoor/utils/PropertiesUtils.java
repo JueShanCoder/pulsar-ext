@@ -7,7 +7,6 @@ import java.net.URL;
 import java.util.Properties;
 
 /**
- *
  * @ClassName: PropertiesUtils
  * @Description: 获取配置文件信息
  * @date: 2017年11月25日 上午10:56:00
@@ -15,12 +14,12 @@ import java.util.Properties;
  */
 public class PropertiesUtils {
 
-    public static Properties getProperties(){
+    public static Properties getProperties() {
         Properties props = null;
         InputStream is = null;
         try {
             URL url = Thread.currentThread().getContextClassLoader().getResource("QiMoor.properties");
-            if (url == null){
+            if (url == null) {
                 throw new IllegalArgumentException(" Argument url should not be null ");
             }
             is = url.openStream();

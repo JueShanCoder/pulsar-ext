@@ -19,28 +19,28 @@ public class GetUrlSubjectMapping implements GetObjectService {
         PreparedStatement preparedStatement = null;
         ResultSet row = null;
         RemoteUrlSubjectMapping getUrlSubjectMapping = null;
-        try{
+        try {
             preparedStatement = connection.prepareStatement(sql);
             row = preparedStatement.executeQuery();
             while (row.next()) {
                 // map to entity
                 getUrlSubjectMapping = convertResultToEntity(row, RemoteUrlSubjectMapping.class);
             }
-        }finally {
-            closeSession(connection,row,preparedStatement);
+        } finally {
+            closeSession(connection, row, preparedStatement);
         }
-        log.info(" remoteCourse entity is {}",new Gson().toJson(getUrlSubjectMapping));
+        log.info(" remoteCourse entity is {}", new Gson().toJson(getUrlSubjectMapping));
         return getUrlSubjectMapping;
     }
 
-    public static String getUrlSubjectMapper(String url){
+    public static String getUrlSubjectMapper(String url) {
         return "SELECT\n" +
                 "\t`subject_id`,\n" +
                 "\t`subject_name`\n" +
                 "FROM\n" +
                 "\t`d_bxg_crm`.`t_url_subject_mapping`\n" +
                 "WHERE\n" +
-                "\t`url` = '"+url+"'";
+                "\t`url` = '" + url + "'";
     }
 
 }

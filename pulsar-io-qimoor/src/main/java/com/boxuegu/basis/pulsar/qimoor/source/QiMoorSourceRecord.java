@@ -15,7 +15,7 @@ public class QiMoorSourceRecord implements Record<byte[]> {
     private final Consumer<QiMoorWebChat> ackCommit;
     private final Consumer<QiMoorWebChat> failCommit;
 
-    public QiMoorSourceRecord(QiMoorWebChat qiMoorWebChat,Consumer<QiMoorWebChat> ackCommit,
+    public QiMoorSourceRecord(QiMoorWebChat qiMoorWebChat, Consumer<QiMoorWebChat> ackCommit,
                               Consumer<QiMoorWebChat> failCommit) {
         this.qiMoorWebChat = qiMoorWebChat;
         this.ackCommit = ackCommit;

@@ -45,7 +45,7 @@ public class WebChatSink {
      */
     private String utmTerm;
     /**
-     *  广告系列媒介
+     * 广告系列媒介
      */
     private String utmMedium;
     /**

@@ -9,7 +9,6 @@ import java.util.Date;
 import java.util.Map;
 
 /**
- *
  * 七陌会话原始消息
  **/
 @Data
@@ -184,7 +183,7 @@ public class QiMoorWebChat implements Serializable {
     /**
      * 获取用户操作系统等信息 可能为空
      */
-    private Map<String,String> ubaInfo;
+    private Map<String, String> ubaInfo;
 
     /**
      * 访客平台信息

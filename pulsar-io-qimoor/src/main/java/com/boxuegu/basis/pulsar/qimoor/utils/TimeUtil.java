@@ -63,14 +63,13 @@ public class TimeUtil {
     /**
      * 格式化数据 20200401/044540
      */
-    public static String formatTimeStr(String time) throws ParseException
-    {
-        String newTime = time.substring(0,4) + "-";
-        newTime += time.substring(4,6) + "-";
-        newTime += time.substring(6,8) + " ";
-        newTime += time.substring(9,11) + ":";
-        newTime += time.substring(11,13) + ":";
-        newTime += time.substring(13,15);
+    public static String formatTimeStr(String time) throws ParseException {
+        String newTime = time.substring(0, 4) + "-";
+        newTime += time.substring(4, 6) + "-";
+        newTime += time.substring(6, 8) + " ";
+        newTime += time.substring(9, 11) + ":";
+        newTime += time.substring(11, 13) + ":";
+        newTime += time.substring(13, 15);
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         Date date = sdf.parse(newTime);
         return sdf.format(date);
@@ -201,9 +200,9 @@ public class TimeUtil {
         return getDefineCurrentMonth(0, 1);
     }
 
-    public static String after2Years(){
+    public static String after2Years() {
         Date date = new Date();
-        Calendar calendar =Calendar.getInstance();
+        Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
         calendar.add(Calendar.YEAR, 2);
         date = calendar.getTime();
@@ -213,19 +212,19 @@ public class TimeUtil {
 
     /**
      * 根据开始时间、结束时间，以24小时分组返回，如果开始、结束时间在24小时内，返回结果索引0是开始时间，索引1是结束时间
+     *
      * @param beginTime 开始时间
-     * @param endTime 结束时间
+     * @param endTime   结束时间
      */
-    public static List<String> getDaysBy24Hours(String beginTime, String endTime)
-    {
+    public static List<String> getDaysBy24Hours(String beginTime, String endTime) {
         List<String> result = new ArrayList<>();
         Long hours = 86400000L;
         Long beginLong = TimeUtil.getLongTimeByStr(beginTime);
         Long endLong = TimeUtil.getLongTimeByStr(endTime);
         result.add(beginTime);
-        while (true){
+        while (true) {
             beginLong = beginLong + hours;
-            if(beginLong >= endLong){
+            if (beginLong >= endLong) {
                 result.add(endTime);
                 break;
             }
@@ -235,8 +234,8 @@ public class TimeUtil {
         return result;
     }
 
-    public static String getYMD(String timeStr){
-        return timeStr.substring(0,13);
+    public static String getYMD(String timeStr) {
+        return timeStr.substring(0, 13);
     }
 
     /**
@@ -265,26 +264,26 @@ public class TimeUtil {
     }
 
     /**
-     * @description:  计算两个字符串日期相差的天数
-     * @param date1 字符串日期1
-     * @param date2 字符串日期2
+     * @param date1  字符串日期1
+     * @param date2  字符串日期2
      * @param format 日期格式化方式  format="yyyy-MM-dd"
+     * @description: 计算两个字符串日期相差的天数
      */
-    public static Long dayDiff(String date1, String date2,String format) {
+    public static Long dayDiff(String date1, String date2, String format) {
         SimpleDateFormat formater = new SimpleDateFormat(format);
-        long diff= 0L;
+        long diff = 0L;
         try {
             long d1 = formater.parse(date1).getTime();
             long d2 = formater.parse(date2).getTime();
             //diff=(Math.abs(d1-d2) / (1000 * 60 * 60 * 24));
-            diff=(d1-d2)/(1000 * 60 * 60 * 24);
+            diff = (d1 - d2) / (1000 * 60 * 60 * 24);
         } catch (ParseException e) {
             e.printStackTrace();
         }
         return diff;
     }
 
-    public static boolean compareTo(String nowTime,String beforeTime){
+    public static boolean compareTo(String nowTime, String beforeTime) {
         int i = nowTime.compareTo(beforeTime);
         return i < 0 || i == 0;
     }
@@ -298,31 +297,31 @@ public class TimeUtil {
         return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(calendar.getTime());
     }
 
-    public static String getISO8601Timestamp(Date date){
+    public static String getISO8601Timestamp(Date date) {
         TimeZone tz = TimeZone.getTimeZone("UTC");
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
         df.setTimeZone(tz);
         return df.format(date);
     }
 
-    public static String getISO8601TimeByStr(String timeStr){
-        return timeStr.replace(" ","T");
+    public static String getISO8601TimeByStr(String timeStr) {
+        return timeStr.replace(" ", "T");
     }
 
-    public static int timeDiff(String beginTime,String endTime) throws ParseException {
+    public static int timeDiff(String beginTime, String endTime) throws ParseException {
         SimpleDateFormat simpleFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
         Date fromDate2 = simpleFormat.parse(beginTime);
         Date toDate2 = simpleFormat.parse(endTime);
         long from2 = fromDate2.getTime();
         long to2 = toDate2.getTime();
-        return (int)((to2 - from2) / 1000);
+        return (int) ((to2 - from2) / 1000);
     }
 
-    public static void main(String[] args) throws Exception{
+    public static void main(String[] args) throws Exception {
 //        Date date = new Date();
 //        String s = "2019-02-01 11:11:11";
 //        System.out.println(getISO8601Timestamp(date));
 //        System.out.println(getISO8601TimeByStr(s));
-        System.out.println(timeDiff("2020-09-14 17:55:00","2020-09-14 17:56:01"));
+        System.out.println(timeDiff("2020-09-14 17:55:00", "2020-09-14 17:56:01"));
     }
 }

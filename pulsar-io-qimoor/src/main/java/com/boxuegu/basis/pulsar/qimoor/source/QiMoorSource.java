@@ -20,8 +20,11 @@ import org.apache.pulsar.io.core.annotations.IOType;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -61,16 +64,16 @@ public class QiMoorSource extends PushSource<byte[]> {
         workerId = qiMoorSourceConfig.getSnowflakeWorkerId();
 
         if (apiAdapterUrl == null || collectQimoor == null || offsetBeginTime == null || timeDiff == null ||
-                isOpenTimeDiff == null || stateKey == null || clusterId == null || workerId == null){
+                isOpenTimeDiff == null || stateKey == null || clusterId == null || workerId == null) {
             throw new IllegalArgumentException(" Required parameters are not set... Please check the startup script !!! ");
         }
 
-        Executors.newSingleThreadExecutor().submit(()->{
+        Executors.newSingleThreadExecutor().submit(() -> {
             taskJob(sourceContext);
         });
     }
 
-    private void taskJob(SourceContext sourceContext){
+    private void taskJob(SourceContext sourceContext) {
         IdWorker idWorker;
         final AtomicInteger counter = new AtomicInteger(0);
         AtomicReference<String> beginTime = new AtomicReference<>("");
@@ -79,10 +82,10 @@ public class QiMoorSource extends PushSource<byte[]> {
         Map<String, ByteBuffer> paramsMap = new HashMap<>();
         try {
             idWorker = new IdWorker(clusterId.longValue(), workerId.longValue());
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new IllegalArgumentException(" Initialization snowFlake fail ... ");
         }
-        for (;;) {
+        for (; ; ) {
             try {
                 ByteBuffer buffer = sourceContext.getState(stateKey);
                 JsonObject jsonObject;
@@ -105,7 +108,7 @@ public class QiMoorSource extends PushSource<byte[]> {
                 }
 
                 jsonObject = dealWithSession(beginTime.get(), endTime.get(), pageNum);
-                if (jsonObject == null){
+                if (jsonObject == null) {
                     throw new IllegalArgumentException(" Argument jsonObject should not be null ");
                 }
                 int count = jsonObject.getAsJsonObject("data").get("count").getAsInt();
@@ -126,13 +129,13 @@ public class QiMoorSource extends PushSource<byte[]> {
                                         beginTime.set(webChat.getCreateTime());
                                         if (counter.get() < qiMoorWebChat.size()) {
                                             counter.incrementAndGet();
-                                            paramsMap.put(stateKey,string2ByteBuffer(beginTime.get() + "_" + endTime.get() + "_" + pageNum.get(), StandardCharsets.UTF_8));
+                                            paramsMap.put(stateKey, string2ByteBuffer(beginTime.get() + "_" + endTime.get() + "_" + pageNum.get(), StandardCharsets.UTF_8));
                                         } else {
                                             counter.set(0);
                                             pageNum.incrementAndGet();
                                             sourceContext.putState(stateKey, string2ByteBuffer(beginTime.get() + "_" + endTime.get() + "_" + pageNum.get(), StandardCharsets.UTF_8));
                                         }
-                            },
+                                    },
                                     (v) -> {
                                         log.info(" receive fail response .. ");
                                         sourceContext.putState(stateKey, paramsMap.get(stateKey));
@@ -140,35 +143,35 @@ public class QiMoorSource extends PushSource<byte[]> {
                         });
                     }
                 }
-            }catch (Exception e){
+            } catch (Exception e) {
                 log.error("[QiMoorSource] got Exception ...", e);
             }
         }
     }
 
-    private JsonObject dealWithSession(String beginTime, String endTime, AtomicInteger pageNum){
+    private JsonObject dealWithSession(String beginTime, String endTime, AtomicInteger pageNum) {
         try {
             Map<String, Object> paramMap = new HashMap<>();
             paramMap.put("qimoor", collectQimoor);
             paramMap.put("beginTime", beginTime);
             paramMap.put("endTime", endTime);
             paramMap.put("pageNum", pageNum.get());
-            QiMoorClient qiMoorClient = Feign.builder().decoder(new GsonDecoder()).target(QiMoorClient.class,apiAdapterUrl);
+            QiMoorClient qiMoorClient = Feign.builder().decoder(new GsonDecoder()).target(QiMoorClient.class, apiAdapterUrl);
             JsonObject jsonObject = qiMoorClient.pastWebChatCollect(paramMap);
-            if (jsonObject == null){
+            if (jsonObject == null) {
                 throw new IllegalArgumentException(" Argument jsonObject should not be null ");
             }
-            jsonObject.getAsJsonObject("data").addProperty("beginTimeSource",beginTime);
+            jsonObject.getAsJsonObject("data").addProperty("beginTimeSource", beginTime);
             if (jsonObject.get("code").getAsInt() != 200)
                 return null;
             return jsonObject;
-        }catch (Exception e){
-            log.error("[ Got exception ]",e);
+        } catch (Exception e) {
+            log.error("[ Got exception ]", e);
             throw e;
         }
     }
 
-    public static List<QiMoorWebChat> getQiMoorWebChat(JsonObject jsonObject,IdWorker idWorker) {
+    public static List<QiMoorWebChat> getQiMoorWebChat(JsonObject jsonObject, IdWorker idWorker) {
         List<QiMoorWebChat> list;
         Gson gson = GsonBuilderUtil.create(false);
         JsonArray ja = jsonObject.getAsJsonObject("data").getAsJsonArray("webchatSession");

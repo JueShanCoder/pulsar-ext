@@ -10,16 +10,14 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.boxuegu.basis.pulsar.qimoor.utils.PropertiesUtils.getProperties;
-
 public class JdbcServiceImpl implements JdbcService {
 
     @Override
     public Connection getConnection(String jdbcUrl, String userName, String password) throws Exception {
         Class.forName(getDriverClassName(jdbcUrl));
         Properties jdbcProperties = new Properties();
-        jdbcProperties.setProperty("user",userName);
-        jdbcProperties.setProperty("password",password);
+        jdbcProperties.setProperty("user", userName);
+        jdbcProperties.setProperty("password", password);
         return DriverManager.getConnection(jdbcUrl, jdbcProperties);
     }
 
@@ -59,7 +57,7 @@ public class JdbcServiceImpl implements JdbcService {
     }
 
 
-    public static void closeSession(Connection connection,ResultSet row, PreparedStatement preparedStatement) throws Exception{
+    public static void closeSession(Connection connection, ResultSet row, PreparedStatement preparedStatement) throws Exception {
         if (connection != null) {
             connection.close();
         }

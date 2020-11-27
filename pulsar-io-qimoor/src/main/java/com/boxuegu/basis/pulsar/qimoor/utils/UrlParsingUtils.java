@@ -101,9 +101,9 @@ public class UrlParsingUtils {
      * 转换数据 JDBC结果集转实体
      *
      * @param resultSet 结果集
-     * @param clazz	实体字节码文件对象
-     * @param <T>	实体类型
-     * @throws Exception  sql异常 NoClass异常等等
+     * @param clazz     实体字节码文件对象
+     * @param <T>       实体类型
+     * @throws Exception sql异常 NoClass异常等等
      */
     public static <T> List<T> exchangeData(ResultSet resultSet, Class<T> clazz) throws Exception {
         //获取全部类方法  包括父类的
@@ -117,7 +117,7 @@ public class UrlParsingUtils {
             for (Method method : declaredMethods) {
                 //获取方法名
                 String name = method.getName();
-                if (!name.startsWith("set")){
+                if (!name.startsWith("set")) {
                     //只要setter
                     continue;
                 }
@@ -129,7 +129,7 @@ public class UrlParsingUtils {
                     if (metaData.getColumnName(i).equals(dbName)) {
                         if (resultSet.getObject(i) != null) {
                             //赋值
-                            setValue(obj,method,resultSet,i);
+                            setValue(obj, method, resultSet, i);
                         }
                         break;
                     }
@@ -141,44 +141,36 @@ public class UrlParsingUtils {
     }
 
     /**
-     *  赋值操作，
-     *  	主要是处理数据类型
-     *  		此处只简单处理下基本数据类型和Date类型
-     * @param obj	泛型对象
-     * @param method	方法
-     * @param resultSet	结果集
-     * @param i	脚标
-     * @param <T>	泛型
+     * 赋值操作，
+     * 主要是处理数据类型
+     * 此处只简单处理下基本数据类型和Date类型
+     *
+     * @param obj       泛型对象
+     * @param method    方法
+     * @param resultSet 结果集
+     * @param i         脚标
+     * @param <T>       泛型
      */
     private static <T> void setValue(T obj, Method method, ResultSet resultSet, int i) throws SQLException, InvocationTargetException, IllegalAccessException {
         //Setter方法只有一个参数，获取参数类型名称
         String name = method.getParameterTypes()[0].getName().toLowerCase();
-        if (name.contains("string")){
+        if (name.contains("string")) {
             method.invoke(obj, resultSet.getString(i));
-        }
-        else if (name.contains("short")){
-            method.invoke(obj,resultSet.getShort(i));
-        }
-        else if (name.contains("int") || name.contains("integer")){
-            method.invoke(obj,resultSet.getInt(i));
-        }
-        else if (name.contains("long")){
-            method.invoke(obj,resultSet.getLong(i));
-        }
-        else if (name.contains("float")){
-            method.invoke(obj,resultSet.getFloat(i));
-        }
-        else if (name.contains("double")){
-            method.invoke(obj,resultSet.getDouble(i));
-        }
-        else if (name.contains("boolean")){
-            method.invoke(obj,resultSet.getBoolean(i));
-        }
-        else if (name.contains("date")){
-            method.invoke(obj,resultSet.getDate(i));
-        }
-
-        else {
+        } else if (name.contains("short")) {
+            method.invoke(obj, resultSet.getShort(i));
+        } else if (name.contains("int") || name.contains("integer")) {
+            method.invoke(obj, resultSet.getInt(i));
+        } else if (name.contains("long")) {
+            method.invoke(obj, resultSet.getLong(i));
+        } else if (name.contains("float")) {
+            method.invoke(obj, resultSet.getFloat(i));
+        } else if (name.contains("double")) {
+            method.invoke(obj, resultSet.getDouble(i));
+        } else if (name.contains("boolean")) {
+            method.invoke(obj, resultSet.getBoolean(i));
+        } else if (name.contains("date")) {
+            method.invoke(obj, resultSet.getDate(i));
+        } else {
             method.invoke(obj, resultSet.getObject(i));
         }
 
@@ -186,13 +178,14 @@ public class UrlParsingUtils {
 
     /**
      * 实体setter名称转对应数据库列的列名
-     * 		需要遵守命名规范，java（驼峰命名法），数据库（全小写，单词间用'_'隔开）
+     * 需要遵守命名规范，java（驼峰命名法），数据库（全小写，单词间用'_'隔开）
+     *
      * @param name setter名称
-     * @return	数据库列名
+     * @return 数据库列名
      */
     private static String getDbName(String name) {
         //根据setter命名规则获取对应的属性名
-        name = name.substring(3,4).toLowerCase()+name.substring(4);
+        name = name.substring(3, 4).toLowerCase() + name.substring(4);
         //获取数据库对应列名
         StringBuilder buffer = new StringBuilder();
         char[] nameChars = name.toCharArray();
