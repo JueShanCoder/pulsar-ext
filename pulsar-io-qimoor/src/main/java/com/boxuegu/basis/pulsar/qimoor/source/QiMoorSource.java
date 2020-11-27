@@ -13,13 +13,11 @@ import com.google.gson.reflect.TypeToken;
 import feign.Feign;
 import feign.gson.GsonDecoder;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.pulsar.functions.api.Record;
 import org.apache.pulsar.io.core.PushSource;
 import org.apache.pulsar.io.core.SourceContext;
 import org.apache.pulsar.io.core.annotations.Connector;
 import org.apache.pulsar.io.core.annotations.IOType;
 
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
