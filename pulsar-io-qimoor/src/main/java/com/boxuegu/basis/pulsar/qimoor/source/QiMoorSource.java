@@ -122,11 +122,11 @@ public class QiMoorSource extends PushSource<byte[]> {
                 } else {
                     List<QiMoorWebChat> qiMoorWebChat = getQiMoorWebChat(jsonObject, idWorker);
                     if (!(qiMoorWebChat == null || qiMoorWebChat.isEmpty())) {
-                        qiMoorWebChat.sort(Comparator.comparing(QiMoorWebChat::getCreateTime));
+                        qiMoorWebChat.sort(Comparator.comparing(QiMoorWebChat::getCreateTime).reversed());
                         qiMoorWebChat.forEach(webChat -> {
                             consume(new QiMoorSourceRecord(webChat,
                                     (v) -> {
-                                        beginTime.set(webChat.getCreateTime());
+                                        endTime.set(webChat.getCreateTime());
                                         if (counter.get() < qiMoorWebChat.size()) {
                                             counter.incrementAndGet();
                                             paramsMap.put(stateKey, string2ByteBuffer(beginTime.get() + "_" + endTime.get() + "_" + pageNum.get(), StandardCharsets.UTF_8));
