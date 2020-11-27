@@ -127,13 +127,9 @@ public class QiMoorSource extends PushSource<byte[]> {
                                     (t) -> {
                                         beginTime.set(webChat.getCreateTime());
                                         if (counter.get() < qiMoorWebChat.size()) {
-//                                            log.info(" [未达到写state要求] 当前的计数器（counter）为 {} , 当前单页共有 {} 条数据 , 当前为分页的第 {} , 请求的beginTime为 {} , 请求的endTime为 {} ",
-//                                                    counter.get(),qiMoorWebChat.size(),pageNum.get(),beginTime.get(),endTime.get());
                                             counter.incrementAndGet();
                                             paramsMap.put(stateKey,string2ByteBuffer(beginTime.get() + "_" + endTime.get() + "_" + pageNum.get(), StandardCharsets.UTF_8));
                                         } else {
-//                                            log.info(" [达到写state的要求] 当前计数器（counter）为 {} , 当前单页共有 {} 条数据 , 当前为分页的第 {} , 请求的beginTime为 {} , 请求的endTime为 {} ",
-//                                                    counter.get(),qiMoorWebChat.size(),pageNum.get(),beginTime.get(),endTime.get());
                                             counter.set(0);
                                             pageNum.incrementAndGet();
                                             sourceContext.putState(stateKey, string2ByteBuffer(beginTime.get() + "_" + endTime.get() + "_" + pageNum.get(), StandardCharsets.UTF_8));
