@@ -22,7 +22,7 @@
 
 > 启动脚本
 ``` java 
-$ ./bin/pulsar-admin source create --source-config-file connectors/source/qimoor-source.yml
+$ ./bin/pulsar-admin source localrun --destination-topic-name qimoor-source-topic --source-config-file connectors/source/qimoor-source.yml
 ```
 
 > qimoor-source.yml 
@@ -39,7 +39,6 @@ configs:
   snowflake-worker-id: 0
   api-adapter-url: "http://docker.for.mac.host.internal:8081"
   collect-qimoor: "BXG"
-  qimoor-source-topic-name: "qimoor-source-topic"
   offset-begin-time: "2020-10-01 00:00:00"
   offset-state-key: "PAST_WEB_CHAT_COLLECT"
   time-difference: "0"
