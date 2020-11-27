@@ -38,7 +38,7 @@ class JdbcSink : Sink<ByteArray> {
 
     override fun write(record: Record<ByteArray>) {
         LOGGER.info("ACTION: {}, TARGET: {}, ENTITY: {}, RECORD: {}", record.action, record.target, record.entity, record::class)
-        val sql = connection.buildSQL(record.target, record.action, record.entity)
+        val sql = connection.buildSQL(record.target, record.action, record.entity, record.sqlMode)
         val statement = connection.prepareStatement(sql)
         LOGGER.info("STATEMENT: {}", sql)
         statement.bindValue(record.target, record.action, record.entity)
@@ -62,3 +62,6 @@ inline val Record<ByteArray>.target: String
 
 inline val Record<ByteArray>.entity: JsonElement
     get() = JsonParser().parse(String(value))
+
+inline val Record<ByteArray>.sqlMode: Set<String>
+    get() = properties["SQLMODE"]?.toUpperCase()?.split(',')?.toSet() ?: setOf()

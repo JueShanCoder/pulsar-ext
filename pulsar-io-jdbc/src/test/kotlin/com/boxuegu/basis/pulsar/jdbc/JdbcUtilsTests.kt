@@ -38,7 +38,7 @@ abstract class JdbcUtilsTests {
     open fun cleanup() {}
 
     private fun testAction(target: String, action: JdbcAction, entity: JsonElement) {
-        connection.buildSQL(target, action, entity).also {
+        connection.buildSQL(target, action, entity, setOf("INSERT_IGNORE_INVALID")).also {
             LOGGER.info("STATEMENT: $it")
         }.let {
             connection.prepareStatement(it)

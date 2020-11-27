@@ -4,7 +4,9 @@ import com.google.gson.JsonElement
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.sql.*
-import java.time.*
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 import java.util.*
 
 enum class JdbcDriver(val value: String) {
@@ -88,7 +90,7 @@ data class JdbcField(
         val isKey: Boolean,
         val value: Any?,
 
-) {
+        ) {
     override fun toString(): String {
         return "JdbcField(name='$name', type=${JDBCType.valueOf(type).name}, isKey=$isKey, value=$value)"
     }
@@ -149,16 +151,23 @@ private fun Connection.p(table: JdbcTable): String = table.keys.joinToString { "
 
 //endregion
 
-fun Connection.buildSQL(target: String, action: JdbcAction, entity: JsonElement): String {
+fun Connection.buildSQL(target: String, action: JdbcAction, entity: JsonElement, sqlMode: Set<String>): String {
     if (action == JdbcAction.SCHEMA) {
         return entity.asJsonObject.get("ddl").asString
     }
     val table = metaData.loadTable(target)
     val fields = entity.asJsonObject.entrySet().filter { table.hasColumn(it.key) }
     val nonKeys = fields.filterNot { table.hasKey(it.key) }
+    val ignoreInvalid = sqlMode.contains("INSERT_IGNORE_INVALID")
     return when (action) {
         JdbcAction.INSERT -> {
-            "INSERT INTO ${t(table)} (${fields.joinToString { q(it.key) }}) VALUES (${fields.joinToString { "?" }})"
+            when (metaData.driverName) {
+                JdbcDriver.MYSQL.value,
+                JdbcDriver.MARIADB.value ->
+                    "INSERT${if (ignoreInvalid) " IGNORE" else ""} INTO ${t(table)} (${fields.joinToString { q(it.key) }}) VALUES (${fields.joinToString { "?" }})"
+                else ->
+                    "INSERT INTO ${t(table)} (${fields.joinToString { q(it.key) }}) VALUES (${fields.joinToString { "?" }})"
+            }
         }
 
         JdbcAction.UPSERT -> {

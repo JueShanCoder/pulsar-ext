@@ -39,6 +39,7 @@ public class TimeUtil {
     public static String getNowWithNoSecond() {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:00");
         Date date = new Date(new Date().getTime() - 60 * 1000);
+        Date date = new Date();
         return sdf.format(date);
     }
 
