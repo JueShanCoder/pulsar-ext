@@ -22,7 +22,6 @@ import org.apache.pulsar.io.core.annotations.IOType;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -124,12 +123,8 @@ public class QiMoorSource extends PushSource<byte[]> {
                 } else {
                     List<QiMoorWebChat> qiMoorWebChat = getQiMoorWebChat(jsonObject, idWorker);
                     if (!(qiMoorWebChat == null || qiMoorWebChat.isEmpty())) {
-                        log.info("qiMoorWebChat sort before is {}",new Gson().toJson(qiMoorWebChat));
-                        qiMoorWebChat.sort(Comparator.comparing(QiMoorWebChat::getCreateTime).reversed());
-                        log.info("qiMoorWebChat sort after is {}",new Gson().toJson(qiMoorWebChat));
                         qiMoorWebChat.forEach(webChat -> consume(new QiMoorSourceRecord(webChat,
                                 (v) -> {
-                                    endTime.set(webChat.getCreateTime());
                                     if (counter.get() < qiMoorWebChat.size()) {
                                         counter.incrementAndGet();
                                         paramsMap.put(stateKey, string2ByteBuffer(beginTime.get() + "_" + endTime.get() + "_" + pageNum.get(), StandardCharsets.UTF_8));
@@ -140,6 +135,8 @@ public class QiMoorSource extends PushSource<byte[]> {
                                     }
                                 },
                                 (v) -> {
+                                    endTime.set(webChat.getCreateTime());
+                                    pageNum.set(1);
                                     log.info(" receive fail response .. ");
                                     sourceContext.putState(stateKey, paramsMap.get(stateKey));
                                 })));

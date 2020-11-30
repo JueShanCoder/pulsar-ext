@@ -1,6 +1,7 @@
 package com.boxuegu.basis.pulsar.qimoor.source.record;
 
 import com.boxuegu.basis.pulsar.qimoor.entity.QiMoorWebChat;
+import com.boxuegu.basis.pulsar.qimoor.utils.gson.GsonBuilderUtil;
 import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pulsar.functions.api.Record;
@@ -22,10 +23,12 @@ public class QiMoorSourceRecord implements Record<byte[]> {
         this.failCommit = failCommit;
     }
 
+    private final Gson gson = GsonBuilderUtil.create(false);
+
     @Override
     public byte[] getValue() {
         try {
-            return new Gson().toJson(qiMoorWebChat).getBytes(StandardCharsets.UTF_8);
+            return gson.toJson(qiMoorWebChat).getBytes(StandardCharsets.UTF_8);
         } catch (RuntimeException ex) {
             log.warn("Error when serialize event to bytes", ex);
             throw ex;
@@ -34,13 +37,11 @@ public class QiMoorSourceRecord implements Record<byte[]> {
 
     @Override
     public void ack() {
-        log.info(" ack receive ...");
         ackCommit.accept(qiMoorWebChat);
     }
 
     @Override
     public void fail() {
-        log.info(" fail receive ...");
         failCommit.accept(qiMoorWebChat);
     }
 }
