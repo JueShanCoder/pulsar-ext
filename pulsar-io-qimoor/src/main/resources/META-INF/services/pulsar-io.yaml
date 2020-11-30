@@ -1,4 +1,4 @@
 name: pulsar-io-qimoor-source
 description: Pulsar IO qimoor source
 sourceClass: com.boxuegu.basis.pulsar.qimoor.source.QiMoorSource
-sourceConfigClass: com.boxuegu.basis.pulsar.qimoor.source.QiMoorSourceConfig
+sourceConfigClass: com.boxuegu.basis.pulsar.qimoor.source.config.QiMoorSourceConfig

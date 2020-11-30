@@ -4,6 +4,7 @@ import com.boxuegu.basis.pulsar.qimoor.client.QiMoorClient;
 import com.boxuegu.basis.pulsar.qimoor.entity.WebChatMsgSink;
 import com.boxuegu.basis.pulsar.qimoor.entity.WebChatSink;
 import com.boxuegu.basis.pulsar.qimoor.entity.WebchatMessage;
+import com.boxuegu.basis.pulsar.qimoor.function.config.WebChatMsgFunctionConfig;
 import com.boxuegu.basis.pulsar.qimoor.sonwflake.IdWorker;
 import com.boxuegu.basis.pulsar.qimoor.utils.gson.GsonBuilderUtil;
 import com.google.gson.Gson;
@@ -34,46 +35,38 @@ import static com.boxuegu.basis.pulsar.qimoor.utils.TimeUtil.getISO8601TimeByStr
  */
 @Slf4j
 public class WebChatMsgFunction implements Function<byte[], Void> {
-
+    private  WebChatMsgFunctionConfig webChatMsgFunctionConfig;
     private IdWorker idWorker;
-    private String webChatMsgTopicName;
-    private String apiAdapterUrl;
-    String maxTimes;
-    String retryTime;
-
-
     @Override
     public Void process(byte[] input, Context context) throws InterruptedException {
-        String tableName;
-        String collectQimoor;
+
+        webChatMsgFunctionConfig = WebChatMsgFunctionConfig.load(context.getUserConfigMap());
+        if (webChatMsgFunctionConfig.getSnowflakeClusterId() == null || webChatMsgFunctionConfig.getSnowflakeWorkerId() == null ||
+                webChatMsgFunctionConfig.getWebChatMsgTopicName() == null || webChatMsgFunctionConfig.getTableName() == null ||
+                webChatMsgFunctionConfig.getMaxRetryTimes() == null || webChatMsgFunctionConfig.getRetryTime() == null ||
+                webChatMsgFunctionConfig.getCollectQimoor() == null || webChatMsgFunctionConfig.getApiAdapterUrl() == null ){
+            throw new IllegalArgumentException(" Required parameters are not set... Please check the startup script !!! ");
+        }
+
         try {
-            long clusterId = Long.parseLong((String) context.getUserConfigMap().get("snowflake-cluster-id"));
-            long workerId = Long.parseLong((String) context.getUserConfigMap().get("snowflake-worker-id"));
-            webChatMsgTopicName = (String) context.getUserConfigMap().get("web-chat-msg-topic-name");
-            tableName = (String) context.getUserConfigMap().get("table-name");
-            apiAdapterUrl = (String) context.getUserConfigMap().get("api-adapter-url");
-            collectQimoor = (String) context.getUserConfigMap().get("collect-qimoor");
-            maxTimes = (String) context.getUserConfigMap().get("max-retry-times");
-            retryTime = (String) context.getUserConfigMap().get("retry-time");
-            idWorker = new IdWorker(clusterId, workerId);
-        } catch (Exception e) {
-            log.error("[WebChatMsgFunction] init config got exception ", e);
-            return null;
+            idWorker = new IdWorker(webChatMsgFunctionConfig.getSnowflakeClusterId(),webChatMsgFunctionConfig.getSnowflakeWorkerId());
+        } catch (IllegalAccessException e) {
+            throw new IllegalArgumentException(" Snowflake initialization fail ... ");
         }
 
         Gson gson = GsonBuilderUtil.create(true);
         WebChatSink webChatSink = gson.fromJson(new String(input), WebChatSink.class);
         Map<String, String> properties = new HashMap<>();
         properties.put("ACTION", "INSERT");
-        properties.put("TARGET", tableName);
+        properties.put("TARGET", webChatMsgFunctionConfig.getTableName());
         properties.put("SQLMODE", "INSERT_IGNORE_INVALID");
         if (webChatSink.getMsgCount() != null || webChatSink.getReplyMsgCount() != null) {
-            List<WebChatMsgSink> webchatMessages = collectWebChatMessage(collectQimoor, webChatSink);
-            if (!(webchatMessages == null || webchatMessages.isEmpty())) {
-                webchatMessages.forEach(webChat -> {
+            List<WebChatMsgSink> webChatMessages = collectWebChatMessage(webChatMsgFunctionConfig.getCollectQimoor(), webChatSink);
+            if (!(webChatMessages == null || webChatMessages.isEmpty())) {
+                webChatMessages.forEach(webChat -> {
                     try {
-                        context.newOutputMessage(webChatMsgTopicName, Schema.BYTES).value(gson.toJson(webChat).getBytes(StandardCharsets.UTF_8)).properties(properties).send();
-                        log.info("[WebChatMsgFunction] 聊天记录消息成功发送到 {} 队列 ，[7moor] sid {}  ...", webChatMsgTopicName, webChat.getSid());
+                        context.newOutputMessage(webChatMsgFunctionConfig.getWebChatMsgTopicName(), Schema.BYTES).value(gson.toJson(webChat).getBytes(StandardCharsets.UTF_8)).properties(properties).send();
+                        log.info("[WebChatMsgFunction] 聊天记录消息成功发送到 {} 队列 ，[7moor] sid {}  ...", webChatMsgFunctionConfig.getWebChatMsgTopicName(), webChat.getSid());
                     } catch (PulsarClientException e) {
                         log.error("[WebChatMsgFunction] Got PulsarClientException, fail响应，消息即将进入死信队列 ... ", e);
                         context.getCurrentRecord().fail();
@@ -112,11 +105,11 @@ public class WebChatMsgFunction implements Function<byte[], Void> {
     private List<WebChatMsgSink> queryWebchatMessages(String moorEnum, String sid, String sessionId) throws InterruptedException {
         List<WebchatMessage> webchatMessages;
         List<WebChatMsgSink> webChatMsgSinks = new ArrayList<>();
-        QiMoorClient qiMoorClient = Feign.builder().decoder(new GsonDecoder()).target(QiMoorClient.class, apiAdapterUrl);
+        QiMoorClient qiMoorClient = Feign.builder().decoder(new GsonDecoder()).target(QiMoorClient.class, webChatMsgFunctionConfig.getApiAdapterUrl());
         Map<String, Object> paramMap = new HashMap<>();
         paramMap.put("qimoor", moorEnum);
         paramMap.put("sid", sid);
-        int maxRetryTimes = Integer.parseInt(maxTimes);
+        int maxRetryTimes = webChatMsgFunctionConfig.getMaxRetryTimes();
         JsonObject jsonObject = null;
         Gson gson = GsonBuilderUtil.create(false);
         for (int i = 1; i < maxRetryTimes; i++) {
@@ -125,7 +118,7 @@ public class WebChatMsgFunction implements Function<byte[], Void> {
                 break;
             } catch (Exception e) {
                 log.error("[WebChatMsgFunction] 调用7moor接口异常，将进行重试策略... ", e);
-                Thread.sleep(Long.parseLong(retryTime));
+                Thread.sleep(webChatMsgFunctionConfig.getRetryTime());
             }
         }
         if (jsonObject == null) {

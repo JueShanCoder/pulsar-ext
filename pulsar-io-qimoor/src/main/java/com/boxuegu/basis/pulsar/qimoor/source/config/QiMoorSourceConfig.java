@@ -1,4 +1,4 @@
-package com.boxuegu.basis.pulsar.qimoor.source;
+package com.boxuegu.basis.pulsar.qimoor.source.config;
 
 
 import com.google.gson.Gson;
@@ -46,14 +46,6 @@ public class QiMoorSourceConfig implements Serializable {
             help = " qimoor collect mark "
     )
     private String collectQimoor;
-
-    @FieldDoc(
-            required = false,
-            defaultValue = "",
-            sensitive = true,
-            help = "qimoor source output topic name "
-    )
-    private String qimoorSourceTopicName;
 
     @FieldDoc(
             required = true,

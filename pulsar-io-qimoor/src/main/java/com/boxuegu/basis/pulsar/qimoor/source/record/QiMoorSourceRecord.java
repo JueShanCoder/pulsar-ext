@@ -1,4 +1,4 @@
-package com.boxuegu.basis.pulsar.qimoor.source;
+package com.boxuegu.basis.pulsar.qimoor.source.record;
 
 import com.boxuegu.basis.pulsar.qimoor.entity.QiMoorWebChat;
 import com.google.gson.Gson;

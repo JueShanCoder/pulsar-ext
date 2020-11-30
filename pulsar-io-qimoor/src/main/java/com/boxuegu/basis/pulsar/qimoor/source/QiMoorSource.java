@@ -3,6 +3,8 @@ package com.boxuegu.basis.pulsar.qimoor.source;
 import com.boxuegu.basis.pulsar.qimoor.client.QiMoorClient;
 import com.boxuegu.basis.pulsar.qimoor.entity.QiMoorWebChat;
 import com.boxuegu.basis.pulsar.qimoor.sonwflake.IdWorker;
+import com.boxuegu.basis.pulsar.qimoor.source.config.QiMoorSourceConfig;
+import com.boxuegu.basis.pulsar.qimoor.source.record.QiMoorSourceRecord;
 import com.boxuegu.basis.pulsar.qimoor.utils.MessyCodeCheckUtil;
 import com.boxuegu.basis.pulsar.qimoor.utils.TimeUtil;
 import com.boxuegu.basis.pulsar.qimoor.utils.gson.GsonBuilderUtil;
@@ -122,25 +124,25 @@ public class QiMoorSource extends PushSource<byte[]> {
                 } else {
                     List<QiMoorWebChat> qiMoorWebChat = getQiMoorWebChat(jsonObject, idWorker);
                     if (!(qiMoorWebChat == null || qiMoorWebChat.isEmpty())) {
+                        log.info("qiMoorWebChat sort before is {}",new Gson().toJson(qiMoorWebChat));
                         qiMoorWebChat.sort(Comparator.comparing(QiMoorWebChat::getCreateTime).reversed());
-                        qiMoorWebChat.forEach(webChat -> {
-                            consume(new QiMoorSourceRecord(webChat,
-                                    (v) -> {
-                                        endTime.set(webChat.getCreateTime());
-                                        if (counter.get() < qiMoorWebChat.size()) {
-                                            counter.incrementAndGet();
-                                            paramsMap.put(stateKey, string2ByteBuffer(beginTime.get() + "_" + endTime.get() + "_" + pageNum.get(), StandardCharsets.UTF_8));
-                                        } else {
-                                            counter.set(0);
-                                            pageNum.incrementAndGet();
-                                            sourceContext.putState(stateKey, string2ByteBuffer(beginTime.get() + "_" + endTime.get() + "_" + pageNum.get(), StandardCharsets.UTF_8));
-                                        }
-                                    },
-                                    (v) -> {
-                                        log.info(" receive fail response .. ");
-                                        sourceContext.putState(stateKey, paramsMap.get(stateKey));
-                                    }));
-                        });
+                        log.info("qiMoorWebChat sort after is {}",new Gson().toJson(qiMoorWebChat));
+                        qiMoorWebChat.forEach(webChat -> consume(new QiMoorSourceRecord(webChat,
+                                (v) -> {
+                                    endTime.set(webChat.getCreateTime());
+                                    if (counter.get() < qiMoorWebChat.size()) {
+                                        counter.incrementAndGet();
+                                        paramsMap.put(stateKey, string2ByteBuffer(beginTime.get() + "_" + endTime.get() + "_" + pageNum.get(), StandardCharsets.UTF_8));
+                                    } else {
+                                        counter.set(0);
+                                        pageNum.incrementAndGet();
+                                        sourceContext.putState(stateKey, string2ByteBuffer(beginTime.get() + "_" + endTime.get() + "_" + pageNum.get(), StandardCharsets.UTF_8));
+                                    }
+                                },
+                                (v) -> {
+                                    log.info(" receive fail response .. ");
+                                    sourceContext.putState(stateKey, paramsMap.get(stateKey));
+                                })));
                     }
                 }
             } catch (Exception e) {

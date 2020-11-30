@@ -3,6 +3,7 @@ package com.boxuegu.basis.pulsar.qimoor.function;
 import com.boxuegu.basis.pulsar.qimoor.client.QiMoorClient;
 import com.boxuegu.basis.pulsar.qimoor.entity.QiMoorWebChat;
 import com.boxuegu.basis.pulsar.qimoor.entity.WebChatSink;
+import com.boxuegu.basis.pulsar.qimoor.function.config.UnCloseSessionFunctionConfig;
 import com.boxuegu.basis.pulsar.qimoor.sonwflake.IdWorker;
 import com.boxuegu.basis.pulsar.qimoor.utils.gson.GsonBuilderUtil;
 import com.google.gson.Gson;
@@ -40,45 +41,32 @@ public class UnCloseSessionFunction implements Function<byte[], Void> {
 
     @Override
     public Void process(byte[] input, Context context) throws InterruptedException {
-        String tableName;
-        String apiAdapterUrl;
-        String collectQimoor;
-        String maxTimes;
-        String retryTime;
-        try {
-            tableName = (String) context.getUserConfigMap().get("table-name");
-            apiAdapterUrl = (String) context.getUserConfigMap().get("api-adapter-url");
-            jdbcUrl = (String) context.getUserConfigMap().get("jdbc-url");
-            userName = (String) context.getUserConfigMap().get("user-name");
-            password = (String) context.getUserConfigMap().get("password");
-            collectQimoor = (String) context.getUserConfigMap().get("collect-qimoor");
-            maxTimes = (String) context.getUserConfigMap().get("max-retry-times");
-            retryTime = (String) context.getUserConfigMap().get("retry-time");
-            courseTypes = (String) context.getUserConfigMap().get("course-types");
-        } catch (Exception e) {
-            log.error("[UnCloseSessionFunction] init config got exception ", e);
-            return null;
+        UnCloseSessionFunctionConfig unCloseSessionFunctionConfig = UnCloseSessionFunctionConfig.load(context.getUserConfigMap());
+        if (unCloseSessionFunctionConfig.getApiAdapterUrl() == null || unCloseSessionFunctionConfig.getCollectQimoor() == null ||
+                unCloseSessionFunctionConfig.getJdbcUrl() == null || unCloseSessionFunctionConfig.getMaxRetryTimes() == null ||
+                unCloseSessionFunctionConfig.getPassword() == null){
+            throw new IllegalArgumentException(" Required parameters are not set... Please check the startup script !!! ");
         }
         gson = GsonBuilderUtil.create(false);
         QiMoorWebChat qiMoorWebChat = gson.fromJson(new String(input), QiMoorWebChat.class);
         Map<String, String> properties = new HashMap<>();
         properties.put("ACTION", "INSERT");
-        properties.put("TARGET", tableName);
+        properties.put("TARGET", unCloseSessionFunctionConfig.getTableName());
         properties.put("SQLMODE", "INSERT_IGNORE_INVALID");
         Map<String, Object> paramMap = new HashMap<>();
-        paramMap.put("qimoor", collectQimoor);
+        paramMap.put("qimoor", unCloseSessionFunctionConfig.getCollectQimoor());
         paramMap.put("_id", qiMoorWebChat.get_id());
         JsonObject jsonObject = null;
-        int maxRetryTimes = Integer.parseInt(maxTimes);
+        int maxRetryTimes = unCloseSessionFunctionConfig.getMaxRetryTimes();
         // 调用七陌查询会话是否完成
         for (int retry = 1; retry < maxRetryTimes; retry++) {
             try {
-                QiMoorClient qiMoorClient = Feign.builder().decoder(new GsonDecoder()).target(QiMoorClient.class, apiAdapterUrl);
+                QiMoorClient qiMoorClient = Feign.builder().decoder(new GsonDecoder()).target(QiMoorClient.class, unCloseSessionFunctionConfig.getApiAdapterUrl());
                 jsonObject = qiMoorClient.inquireSessionStatus(paramMap);
                 break;
             } catch (Exception e) {
                 log.error("[UnCloseSessionFunction] 调用7moor接口异常，将进行重试策略... ", e);
-                Thread.sleep(Long.parseLong(retryTime));
+                Thread.sleep(unCloseSessionFunctionConfig.getRetryTime());
             }
         }
         if (jsonObject == null) {

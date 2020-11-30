@@ -5,6 +5,7 @@ import com.boxuegu.basis.pulsar.qimoor.entity.WebChatSink;
 import com.boxuegu.basis.pulsar.qimoor.entity.remote.RemoteArticle;
 import com.boxuegu.basis.pulsar.qimoor.entity.remote.RemoteCourse;
 import com.boxuegu.basis.pulsar.qimoor.entity.remote.RemoteUrlSubjectMapping;
+import com.boxuegu.basis.pulsar.qimoor.function.config.QiMoorSourceFunctionConfig;
 import com.boxuegu.basis.pulsar.qimoor.service.GetObjectService;
 import com.boxuegu.basis.pulsar.qimoor.service.JdbcService;
 import com.boxuegu.basis.pulsar.qimoor.service.impl.GetArticleServiceImpl;
@@ -44,60 +45,47 @@ import static com.boxuegu.basis.pulsar.qimoor.utils.UrlParsingUtils.*;
 @Slf4j
 public class QiMoorSourceFunction implements Function<byte[], Void> {
 
-    private String jdbcUrl;
-    private String userName;
-    private String password;
-    private String courseTypes;
-
     Gson gson;
 
     @Override
     public Void process(byte[] input, Context context) {
-        String tableName;
-        try {
-            tableName = (String) context.getUserConfigMap().get("table-name");
-            jdbcUrl = (String) context.getUserConfigMap().get("jdbc-url");
-            userName = (String) context.getUserConfigMap().get("user-name");
-            password = (String) context.getUserConfigMap().get("password");
-            courseTypes = (String) context.getUserConfigMap().get("course-types");
-        } catch (Exception e) {
-            log.error(" [QiMoorSourceFunction] init config got exception ", e);
-            return null;
+        QiMoorSourceFunctionConfig qiMoorSourceFunctionConfig = QiMoorSourceFunctionConfig.load(context.getUserConfigMap());
+        if (qiMoorSourceFunctionConfig.getCloseSessionTopicName() == null || qiMoorSourceFunctionConfig.getCourseTypes() == null ||
+                qiMoorSourceFunctionConfig.getJdbcUrl() == null || qiMoorSourceFunctionConfig.getPassword() == null ||
+                qiMoorSourceFunctionConfig.getTableName() == null || qiMoorSourceFunctionConfig.getUnCloseSessionTopicName() == null ||
+                qiMoorSourceFunctionConfig.getUserName() == null)
+        {
+            throw new IllegalArgumentException(" Required parameters are not set... Please check the startup script !!! ");
         }
 
         gson = GsonBuilderUtil.create(false);
         QiMoorWebChat qiMoorWebChat = gson.fromJson(new String(input), QiMoorWebChat.class);
         Map<String, String> properties = new HashMap<>();
         properties.put("ACTION", "INSERT");
-        properties.put("TARGET", tableName);
+        properties.put("TARGET", qiMoorSourceFunctionConfig.getTableName());
         properties.put("SQLMODE", "INSERT_IGNORE_INVALID");
         if (!qiMoorWebChat.getStatus().equalsIgnoreCase("finish") && !qiMoorWebChat.getStatus().equalsIgnoreCase("invalid")) {
             // unclose session delayed 3Min send
-            context.getUserConfigValue("un-close-session-topic-name").ifPresent(topicName -> {
-                String unCloseTopicName = (String) topicName;
-                try {
-                    context.newOutputMessage(unCloseTopicName, Schema.BYTES).value(gson.toJson(qiMoorWebChat).getBytes(StandardCharsets.UTF_8)).deliverAfter(1L, TimeUnit.MINUTES).send();
-                    context.getCurrentRecord().ack();
-                    log.info("[QiMoorSourceFunction] 消息成功延迟发送到 {} 队列 ... [7moor 数据] SessionId {} Id {}] ", unCloseTopicName, qiMoorWebChat.get_id(), qiMoorWebChat.getId());
-                } catch (PulsarClientException e) {
-                    log.error("[QiMoorSourceFunction] Got PulsarClientException, fail响应，消息即将进入死信队列 ...]", e);
-                    context.getCurrentRecord().fail();
-                }
-            });
+            try {
+                context.newOutputMessage(qiMoorSourceFunctionConfig.getUnCloseSessionTopicName(), Schema.BYTES).value(gson.toJson(qiMoorWebChat).getBytes(StandardCharsets.UTF_8)).deliverAfter(1L, TimeUnit.MINUTES).send();
+                context.getCurrentRecord().ack();
+                log.info("[QiMoorSourceFunction] 消息成功延迟发送到 {} 队列 ... [7moor 数据] SessionId {} Id {}] ", qiMoorSourceFunctionConfig.getUnCloseSessionTopicName(), qiMoorWebChat.get_id(), qiMoorWebChat.getId());
+            } catch (PulsarClientException e) {
+                log.error("[QiMoorSourceFunction] Got PulsarClientException, fail响应，消息即将进入死信队列 ...]", e);
+                context.getCurrentRecord().fail();
+            }
         } else if (qiMoorWebChat.getStatus().equalsIgnoreCase("finish") || qiMoorWebChat.getStatus().equalsIgnoreCase("invalid")) {
             // close session
-            context.getUserConfigValue("close-session-topic-name").ifPresent(topicName -> {
-                try {
-                    Gson webGson = GsonBuilderUtil.create(true);
-                    WebChatSink webChatSink = parseSession(qiMoorWebChat, gson, courseTypes, jdbcUrl, userName, password);
-                    context.newOutputMessage((String) topicName, Schema.BYTES).value(webGson.toJson(webChatSink).getBytes(StandardCharsets.UTF_8)).properties(properties).send();
-                    context.getCurrentRecord().ack();
-                    log.info("[QiMoorSourceFunction] 消息成功发送到 {} 队列 [7moor 数据] SessionId {} Id {}", topicName, qiMoorWebChat.get_id(), qiMoorWebChat.getId());
-                } catch (Exception e) {
-                    log.error("[QiMoorSourceFunction] Got exception, fail 响应，消息即将进入死信队列 ...]", e);
-                    context.getCurrentRecord().fail();
-                }
-            });
+            try {
+                Gson webGson = GsonBuilderUtil.create(true);
+                WebChatSink webChatSink = parseSession(qiMoorWebChat, gson, qiMoorSourceFunctionConfig.getCourseTypes(), qiMoorSourceFunctionConfig.getJdbcUrl(), qiMoorSourceFunctionConfig.getUserName(), qiMoorSourceFunctionConfig.getPassword());
+                context.newOutputMessage(qiMoorSourceFunctionConfig.getCloseSessionTopicName(), Schema.BYTES).value(webGson.toJson(webChatSink).getBytes(StandardCharsets.UTF_8)).properties(properties).send();
+                context.getCurrentRecord().ack();
+                log.info("[QiMoorSourceFunction] 消息成功发送到 {} 队列 [7moor 数据] SessionId {} Id {}", qiMoorSourceFunctionConfig.getCloseSessionTopicName(), qiMoorWebChat.get_id(), qiMoorWebChat.getId());
+            } catch (Exception e) {
+                log.error("[QiMoorSourceFunction] Got exception, fail 响应，消息即将进入死信队列 ...]", e);
+                context.getCurrentRecord().fail();
+            }
         }
         return null;
     }
