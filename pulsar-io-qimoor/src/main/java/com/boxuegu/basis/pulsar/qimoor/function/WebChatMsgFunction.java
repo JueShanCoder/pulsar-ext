@@ -5,7 +5,7 @@ import com.boxuegu.basis.pulsar.qimoor.entity.WebChatMsgSink;
 import com.boxuegu.basis.pulsar.qimoor.entity.WebChatSink;
 import com.boxuegu.basis.pulsar.qimoor.entity.WebchatMessage;
 import com.boxuegu.basis.pulsar.qimoor.function.config.WebChatMsgFunctionConfig;
-import com.boxuegu.basis.pulsar.qimoor.sonwflake.IdWorker;
+import com.boxuegu.basis.pulsar.qimoor.snowflake.IdWorker;
 import com.boxuegu.basis.pulsar.qimoor.utils.gson.GsonBuilderUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;

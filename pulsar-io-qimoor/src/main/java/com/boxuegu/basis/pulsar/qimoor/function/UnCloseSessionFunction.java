@@ -4,7 +4,7 @@ import com.boxuegu.basis.pulsar.qimoor.client.QiMoorClient;
 import com.boxuegu.basis.pulsar.qimoor.entity.QiMoorWebChat;
 import com.boxuegu.basis.pulsar.qimoor.entity.WebChatSink;
 import com.boxuegu.basis.pulsar.qimoor.function.config.UnCloseSessionFunctionConfig;
-import com.boxuegu.basis.pulsar.qimoor.sonwflake.IdWorker;
+import com.boxuegu.basis.pulsar.qimoor.snowflake.IdWorker;
 import com.boxuegu.basis.pulsar.qimoor.utils.gson.GsonBuilderUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;

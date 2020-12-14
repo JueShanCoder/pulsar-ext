@@ -2,7 +2,7 @@ package com.boxuegu.basis.pulsar.qimoor.source;
 
 import com.boxuegu.basis.pulsar.qimoor.client.QiMoorClient;
 import com.boxuegu.basis.pulsar.qimoor.entity.QiMoorWebChat;
-import com.boxuegu.basis.pulsar.qimoor.sonwflake.IdWorker;
+import com.boxuegu.basis.pulsar.qimoor.snowflake.IdWorker;
 import com.boxuegu.basis.pulsar.qimoor.source.config.QiMoorSourceConfig;
 import com.boxuegu.basis.pulsar.qimoor.source.record.QiMoorSourceRecord;
 import com.boxuegu.basis.pulsar.qimoor.utils.MessyCodeCheckUtil;

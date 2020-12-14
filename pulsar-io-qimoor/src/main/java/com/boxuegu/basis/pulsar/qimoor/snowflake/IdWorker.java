@@ -1,4 +1,4 @@
-package com.boxuegu.basis.pulsar.qimoor.sonwflake;
+package com.boxuegu.basis.pulsar.qimoor.snowflake;
 
 public class IdWorker {
     // 2020-01-01T00:00:00.000Z
