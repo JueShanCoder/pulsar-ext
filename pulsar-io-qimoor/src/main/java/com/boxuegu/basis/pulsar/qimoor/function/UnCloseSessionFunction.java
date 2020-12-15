@@ -32,11 +32,6 @@ import static com.boxuegu.basis.pulsar.qimoor.source.QiMoorSource.getQiMoorWebCh
 @Slf4j
 public class UnCloseSessionFunction implements Function<byte[], Void> {
 
-    private String jdbcUrl;
-    private String userName;
-    private String password;
-    private String courseTypes;
-
     Gson gson;
 
     @Override
@@ -44,7 +39,7 @@ public class UnCloseSessionFunction implements Function<byte[], Void> {
         UnCloseSessionFunctionConfig unCloseSessionFunctionConfig = UnCloseSessionFunctionConfig.load(context.getUserConfigMap());
         if (unCloseSessionFunctionConfig.getApiAdapterUrl() == null || unCloseSessionFunctionConfig.getCollectQimoor() == null ||
                 unCloseSessionFunctionConfig.getJdbcUrl() == null || unCloseSessionFunctionConfig.getMaxRetryTimes() == null ||
-                unCloseSessionFunctionConfig.getPassword() == null){
+                unCloseSessionFunctionConfig.getPassword() == null || unCloseSessionFunctionConfig.getCourseTypes() == null){
             throw new IllegalArgumentException(" Required parameters are not set... Please check the startup script !!! ");
         }
         gson = GsonBuilderUtil.create(false);
@@ -98,7 +93,7 @@ public class UnCloseSessionFunction implements Function<byte[], Void> {
                 } else if (qiMoorWebChat.getStatus().equalsIgnoreCase("finish") || qiMoorWebChat.getStatus().equalsIgnoreCase("invalid")) {
                     context.getUserConfigValue("close-session-topic-name").ifPresent(topicName -> {
                         try {
-                            WebChatSink webChatSink = parseSession(qiMoorWebChat, gson, courseTypes, jdbcUrl, userName, password);
+                            WebChatSink webChatSink = parseSession(qiMoorWebChat, gson, unCloseSessionFunctionConfig.getCourseTypes(), unCloseSessionFunctionConfig.getJdbcUrl(), unCloseSessionFunctionConfig.getUserName(), unCloseSessionFunctionConfig.getPassword());
                             context.newOutputMessage((String) topicName, Schema.BYTES).value(gson.toJson(webChatSink).getBytes(StandardCharsets.UTF_8)).properties(properties).send();
                             context.getCurrentRecord().ack();
                             log.info("[UnCloseSessionFunction] 会话为已完成状态，[7moor] sessionId {},Id {}, 消息成功发送到 {} 队列...", webChat.get_id(), webChat.getId(), topicName);

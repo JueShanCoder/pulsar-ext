@@ -111,6 +111,14 @@ public class UnCloseSessionFunctionConfig implements Serializable {
     )
     private String collectQimoor;
 
+    @FieldDoc(
+            required = true,
+            defaultValue = "",
+            sensitive = true,
+            help = " qimoor course types "
+    )
+    private String courseTypes;
+
     public static UnCloseSessionFunctionConfig load(Map<String, Object> map) {
         Gson gson = new Gson();
         return gson.fromJson(gson.toJsonTree(map), UnCloseSessionFunctionConfig.class);
