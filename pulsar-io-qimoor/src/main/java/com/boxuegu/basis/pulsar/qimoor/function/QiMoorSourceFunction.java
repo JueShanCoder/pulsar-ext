@@ -45,7 +45,7 @@ import static com.boxuegu.basis.pulsar.qimoor.utils.UrlParsingUtils.*;
 @Slf4j
 public class QiMoorSourceFunction implements Function<byte[], Void> {
 
-    Gson gson;
+    Gson gson = GsonBuilderUtil.create(false);
 
     @Override
     public Void process(byte[] input, Context context) {
@@ -57,8 +57,6 @@ public class QiMoorSourceFunction implements Function<byte[], Void> {
         {
             throw new IllegalArgumentException(" Required parameters are not set... Please check the startup script !!! ");
         }
-
-        gson = GsonBuilderUtil.create(false);
         QiMoorWebChat qiMoorWebChat = gson.fromJson(new String(input), QiMoorWebChat.class);
         Map<String, String> properties = new HashMap<>();
         properties.put("ACTION", "INSERT");

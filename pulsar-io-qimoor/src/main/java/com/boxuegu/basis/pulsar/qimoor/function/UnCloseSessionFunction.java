@@ -32,7 +32,7 @@ import static com.boxuegu.basis.pulsar.qimoor.source.QiMoorSource.getQiMoorWebCh
 @Slf4j
 public class UnCloseSessionFunction implements Function<byte[], Void> {
 
-    Gson gson;
+    Gson gson = GsonBuilderUtil.create(false);
 
     @Override
     public Void process(byte[] input, Context context) throws InterruptedException {
@@ -42,7 +42,7 @@ public class UnCloseSessionFunction implements Function<byte[], Void> {
                 unCloseSessionFunctionConfig.getPassword() == null || unCloseSessionFunctionConfig.getCourseTypes() == null){
             throw new IllegalArgumentException(" Required parameters are not set... Please check the startup script !!! ");
         }
-        gson = GsonBuilderUtil.create(false);
+
         QiMoorWebChat qiMoorWebChat = gson.fromJson(new String(input), QiMoorWebChat.class);
         Map<String, String> properties = new HashMap<>();
         properties.put("ACTION", "INSERT");
@@ -76,7 +76,7 @@ public class UnCloseSessionFunction implements Function<byte[], Void> {
             log.error("[unCloseSessionFunction] got IllegalAccessException");
             return null;
         }
-        List<QiMoorWebChat> webChats = getQiMoorWebChat(jsonObject, idWorker);
+        List<QiMoorWebChat> webChats = getQiMoorWebChat(jsonObject, idWorker,gson);
         if (!(webChats == null || webChats.isEmpty())) {
             webChats.forEach(webChat -> {
                 if (!webChat.getStatus().equalsIgnoreCase("finish") && !webChat.getStatus().equalsIgnoreCase("invalid")) {

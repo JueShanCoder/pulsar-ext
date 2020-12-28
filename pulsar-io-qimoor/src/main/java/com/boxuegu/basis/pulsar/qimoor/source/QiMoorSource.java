@@ -51,6 +51,7 @@ public class QiMoorSource extends PushSource<byte[]> {
     private Boolean isOpenTimeDiff;
     private Integer clusterId;
     private Integer workerId;
+    Gson gson = GsonBuilderUtil.create(false);
 
     @Override
     public void open(Map<String, Object> config, SourceContext sourceContext) {
@@ -121,7 +122,7 @@ public class QiMoorSource extends PushSource<byte[]> {
                     endTime.set(TimeUtil.getNowWithNoSecond());
                     sourceContext.putState(stateKey, string2ByteBuffer(beginTime + "_" + endTime + "_" + pageNum, StandardCharsets.UTF_8));
                 } else {
-                    List<QiMoorWebChat> qiMoorWebChat = getQiMoorWebChat(jsonObject, idWorker);
+                    List<QiMoorWebChat> qiMoorWebChat = getQiMoorWebChat(jsonObject, idWorker,gson);
                     if (!(qiMoorWebChat == null || qiMoorWebChat.isEmpty())) {
                         qiMoorWebChat.forEach(webChat -> consume(new QiMoorSourceRecord(webChat,
                                 (v) -> {
@@ -170,9 +171,9 @@ public class QiMoorSource extends PushSource<byte[]> {
         }
     }
 
-    public static List<QiMoorWebChat> getQiMoorWebChat(JsonObject jsonObject, IdWorker idWorker) {
+    public static List<QiMoorWebChat> getQiMoorWebChat(JsonObject jsonObject, IdWorker idWorker, Gson gson) {
         List<QiMoorWebChat> list;
-        Gson gson = GsonBuilderUtil.create(false);
+
         JsonArray ja = jsonObject.getAsJsonObject("data").getAsJsonArray("webchatSession");
         list = gson.fromJson(ja.toString(), new TypeToken<List<QiMoorWebChat>>() {
         }.getType());

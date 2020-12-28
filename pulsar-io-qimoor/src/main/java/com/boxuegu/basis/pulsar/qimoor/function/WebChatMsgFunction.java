@@ -37,6 +37,8 @@ import static com.boxuegu.basis.pulsar.qimoor.utils.TimeUtil.getISO8601TimeByStr
 public class WebChatMsgFunction implements Function<byte[], Void> {
     private  WebChatMsgFunctionConfig webChatMsgFunctionConfig;
     private IdWorker idWorker;
+
+    Gson gson = GsonBuilderUtil.create(true);
     @Override
     public Void process(byte[] input, Context context) throws InterruptedException {
 
@@ -54,7 +56,6 @@ public class WebChatMsgFunction implements Function<byte[], Void> {
             throw new IllegalArgumentException(" Snowflake initialization fail ... ");
         }
 
-        Gson gson = GsonBuilderUtil.create(true);
         WebChatSink webChatSink = gson.fromJson(new String(input), WebChatSink.class);
         Map<String, String> properties = new HashMap<>();
         properties.put("ACTION", "INSERT");
@@ -111,7 +112,7 @@ public class WebChatMsgFunction implements Function<byte[], Void> {
         paramMap.put("sid", sid);
         int maxRetryTimes = webChatMsgFunctionConfig.getMaxRetryTimes();
         JsonObject jsonObject = null;
-        Gson gson = GsonBuilderUtil.create(false);
+
         for (int i = 1; i < maxRetryTimes; i++) {
             try {
                 jsonObject = qiMoorClient.pastWebChatMessageCollect(paramMap);
