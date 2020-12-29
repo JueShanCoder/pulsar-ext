@@ -48,12 +48,14 @@ abstract class JdbcUtilsTests {
         }
     }
 
-    private fun testAction(target: String, action: JdbcAction, entity: Map<String, Any>) = testAction(target, action, GSON.toJsonTree(entity))
+    private fun testAction(target: String, action: JdbcAction, entity: Map<String, Any>) =
+        testAction(target, action, GSON.toJsonTree(entity))
 
     @Test
     fun testActions() {
         LOGGER.info("TABLE: ${connection.metaData.loadTable("samples")}")
-        testAction("samples", JdbcAction.INSERT, mapOf(
+        testAction(
+            "samples", JdbcAction.INSERT, mapOf(
                 "id" to 1,
                 "f_boolean" to false,
                 "f_bit" to 0,
@@ -76,8 +78,10 @@ abstract class JdbcUtilsTests {
                 "f_time" to LocalTime.now(),
                 "f_datetime" to LocalDateTime.now(),
                 "f_timestamp" to LocalDateTime.now()
-        ))
-        testAction("samples", JdbcAction.UPSERT, mapOf(
+            )
+        )
+        testAction(
+            "samples", JdbcAction.UPSERT, mapOf(
                 "id" to 2,
                 "f_boolean" to false,
                 "f_bit" to 0,
@@ -100,8 +104,10 @@ abstract class JdbcUtilsTests {
                 "f_time" to LocalTime.now(),
                 "f_datetime" to LocalDateTime.now(),
                 "f_timestamp" to LocalDateTime.now()
-        ))
-        testAction("samples", JdbcAction.UPDATE, mapOf(
+            )
+        )
+        testAction(
+            "samples", JdbcAction.UPDATE, mapOf(
                 "id" to 1,
                 "f_boolean" to true,
                 "f_bit" to 1,
@@ -123,13 +129,18 @@ abstract class JdbcUtilsTests {
                 "f_date" to LocalDate.now(),
                 "f_time" to LocalTime.now(),
                 "f_timestamp" to LocalDateTime.now()
-        ))
-        testAction("samples", JdbcAction.INSERT, mapOf(
+            )
+        )
+        testAction(
+            "samples", JdbcAction.INSERT, mapOf(
                 "id" to 3,
                 "f_timestamp" to LocalDateTime.now()
-        ))
-        testAction("samples", JdbcAction.DELETE, mapOf(
+            )
+        )
+        testAction(
+            "samples", JdbcAction.DELETE, mapOf(
                 "id" to 3
-        ))
+            )
+        )
     }
 }

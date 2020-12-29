@@ -41,10 +41,10 @@ class BinlogSource : PushSource<ByteArray>(), BinaryLogClient.EventListener {
         // Create jdbc connection
         Class.forName("com.mysql.cj.jdbc.Driver")
         connection = DriverManager.getConnection(
-                "jdbc:mysql://${sourceConfig.hostname}:${sourceConfig.port}" +
-                        "?user=${sourceConfig.username}&password=${sourceConfig.password}" +
-                        "&useSSL=false&serverTimezone=${sourceConfig.timezone}&useUnicode=true&characterEncoding=utf8" +
-                        "&yearIsDateType=false&tinyInt1isBit=false&disableMariaDbDriver=true",
+            "jdbc:mysql://${sourceConfig.hostname}:${sourceConfig.port}" +
+                    "?user=${sourceConfig.username}&password=${sourceConfig.password}" +
+                    "&useSSL=false&serverTimezone=${sourceConfig.timezone}&useUnicode=true&characterEncoding=utf8" +
+                    "&yearIsDateType=false&tinyInt1isBit=false&disableMariaDbDriver=true",
         ).also { it.isReadOnly = true } // Readonly connection
 
         sourceContext.putState(BINLOG_OFFSET_STATE_KEY, null)
@@ -64,67 +64,79 @@ class BinlogSource : PushSource<ByteArray>(), BinaryLogClient.EventListener {
         // Create binlog client
         val tableMaps: MutableMap<Long, TableMapEventData> = LRUCache(100, 0.75f, 10000)
         binlogClient = BinaryLogClient(
-                sourceConfig.hostname,
-                sourceConfig.port,
-                sourceConfig.username,
-                sourceConfig.password,
+            sourceConfig.hostname,
+            sourceConfig.port,
+            sourceConfig.username,
+            sourceConfig.password,
         ).also {
             it.setEventDeserializer(object : EventDeserializer(
-                    EventHeaderV4Deserializer(),
-                    NullEventDataDeserializer(),
-                    mutableMapOf(
-                            EventType.FORMAT_DESCRIPTION to FormatDescriptionEventDataDeserializer(),
-                            EventType.ROTATE to RotateEventDataDeserializer(),
-                            EventType.INTVAR to IntVarEventDataDeserializer(),
-                            EventType.QUERY to QueryEventDataDeserializer(),
-                            EventType.TABLE_MAP to TableMapEventDataDeserializer(),
-                            EventType.XID to XidEventDataDeserializer(),
-                            // region Default dml deserializers with internal compatibility properties
-                            EventType.WRITE_ROWS to WriteRowsEventDataDeserializer(tableMaps),
-                            EventType.UPDATE_ROWS to UpdateRowsEventDataDeserializer(tableMaps),
-                            EventType.DELETE_ROWS to DeleteRowsEventDataDeserializer(tableMaps),
-                            EventType.EXT_WRITE_ROWS to WriteRowsEventDataDeserializer(tableMaps).setMayContainExtraInformation(true),
-                            EventType.EXT_UPDATE_ROWS to UpdateRowsEventDataDeserializer(tableMaps).setMayContainExtraInformation(true),
-                            EventType.EXT_DELETE_ROWS to DeleteRowsEventDataDeserializer(tableMaps).setMayContainExtraInformation(true),
-                            // endregion
-                            EventType.ROWS_QUERY to RowsQueryEventDataDeserializer(),
-                            EventType.GTID to GtidEventDataDeserializer(),
-                            EventType.PREVIOUS_GTIDS to PreviousGtidSetDeserializer(),
-                            EventType.XA_PREPARE to XAPrepareEventDataDeserializer(),
-                    ),
-                    tableMaps
+                EventHeaderV4Deserializer(),
+                NullEventDataDeserializer(),
+                mutableMapOf(
+                    EventType.FORMAT_DESCRIPTION to FormatDescriptionEventDataDeserializer(),
+                    EventType.ROTATE to RotateEventDataDeserializer(),
+                    EventType.INTVAR to IntVarEventDataDeserializer(),
+                    EventType.QUERY to QueryEventDataDeserializer(),
+                    EventType.TABLE_MAP to TableMapEventDataDeserializer(),
+                    EventType.XID to XidEventDataDeserializer(),
+                    // region Default dml deserializers with internal compatibility properties
+                    EventType.WRITE_ROWS to WriteRowsEventDataDeserializer(tableMaps),
+                    EventType.UPDATE_ROWS to UpdateRowsEventDataDeserializer(tableMaps),
+                    EventType.DELETE_ROWS to DeleteRowsEventDataDeserializer(tableMaps),
+                    EventType.EXT_WRITE_ROWS to WriteRowsEventDataDeserializer(tableMaps).setMayContainExtraInformation(true),
+                    EventType.EXT_UPDATE_ROWS to UpdateRowsEventDataDeserializer(tableMaps).setMayContainExtraInformation(true),
+                    EventType.EXT_DELETE_ROWS to DeleteRowsEventDataDeserializer(tableMaps).setMayContainExtraInformation(true),
+                    // endregion
+                    EventType.ROWS_QUERY to RowsQueryEventDataDeserializer(),
+                    EventType.GTID to GtidEventDataDeserializer(),
+                    EventType.PREVIOUS_GTIDS to PreviousGtidSetDeserializer(),
+                    EventType.XA_PREPARE to XAPrepareEventDataDeserializer(),
+                ),
+                tableMaps
             ) {
                 init {
                     setCompatibilityMode(
-                            CompatibilityMode.DATE_AND_TIME_AS_LONG,
-                            CompatibilityMode.CHAR_AND_BINARY_AS_BYTE_ARRAY,
-                            CompatibilityMode.INVALID_DATE_AND_TIME_AS_MIN_VALUE,
+                        CompatibilityMode.DATE_AND_TIME_AS_LONG,
+                        CompatibilityMode.CHAR_AND_BINARY_AS_BYTE_ARRAY,
+                        CompatibilityMode.INVALID_DATE_AND_TIME_AS_MIN_VALUE,
                     )
 
                     // region Replace dml deserializers
-                    setEventDataDeserializer(EventType.WRITE_ROWS, InsertDmlEventDataDeserializer(
+                    setEventDataDeserializer(
+                        EventType.WRITE_ROWS, InsertDmlEventDataDeserializer(
                             tableMaps,
-                            getEventDataDeserializer(EventType.WRITE_ROWS) as WriteRowsEventDataDeserializer)
+                            getEventDataDeserializer(EventType.WRITE_ROWS) as WriteRowsEventDataDeserializer
+                        )
                     )
-                    setEventDataDeserializer(EventType.UPDATE_ROWS, UpdateDmlEventDataDeserializer(
+                    setEventDataDeserializer(
+                        EventType.UPDATE_ROWS, UpdateDmlEventDataDeserializer(
                             tableMaps,
-                            getEventDataDeserializer(EventType.UPDATE_ROWS) as UpdateRowsEventDataDeserializer)
+                            getEventDataDeserializer(EventType.UPDATE_ROWS) as UpdateRowsEventDataDeserializer
+                        )
                     )
-                    setEventDataDeserializer(EventType.DELETE_ROWS, DeleteDmlEventDataDeserializer(
+                    setEventDataDeserializer(
+                        EventType.DELETE_ROWS, DeleteDmlEventDataDeserializer(
                             tableMaps,
-                            getEventDataDeserializer(EventType.DELETE_ROWS) as DeleteRowsEventDataDeserializer)
+                            getEventDataDeserializer(EventType.DELETE_ROWS) as DeleteRowsEventDataDeserializer
+                        )
                     )
-                    setEventDataDeserializer(EventType.EXT_WRITE_ROWS, InsertDmlEventDataDeserializer(
+                    setEventDataDeserializer(
+                        EventType.EXT_WRITE_ROWS, InsertDmlEventDataDeserializer(
                             tableMaps,
-                            getEventDataDeserializer(EventType.EXT_WRITE_ROWS) as WriteRowsEventDataDeserializer)
+                            getEventDataDeserializer(EventType.EXT_WRITE_ROWS) as WriteRowsEventDataDeserializer
+                        )
                     )
-                    setEventDataDeserializer(EventType.EXT_UPDATE_ROWS, UpdateDmlEventDataDeserializer(
+                    setEventDataDeserializer(
+                        EventType.EXT_UPDATE_ROWS, UpdateDmlEventDataDeserializer(
                             tableMaps,
-                            getEventDataDeserializer(EventType.EXT_UPDATE_ROWS) as UpdateRowsEventDataDeserializer)
+                            getEventDataDeserializer(EventType.EXT_UPDATE_ROWS) as UpdateRowsEventDataDeserializer
+                        )
                     )
-                    setEventDataDeserializer(EventType.EXT_DELETE_ROWS, DeleteDmlEventDataDeserializer(
+                    setEventDataDeserializer(
+                        EventType.EXT_DELETE_ROWS, DeleteDmlEventDataDeserializer(
                             tableMaps,
-                            getEventDataDeserializer(EventType.EXT_DELETE_ROWS) as DeleteRowsEventDataDeserializer)
+                            getEventDataDeserializer(EventType.EXT_DELETE_ROWS) as DeleteRowsEventDataDeserializer
+                        )
                     )
                     // endregion
                 }
@@ -149,7 +161,10 @@ class BinlogSource : PushSource<ByteArray>(), BinaryLogClient.EventListener {
     override fun onEvent(event: Event) {
         val header = event.getHeader<EventHeader>()
         // Record binlog sync delay
-        sourceContext.recordMetric("pulsar_io_binlog_source_sync_delay_in_ms", (Instant.now().toEpochMilli() - header.timestamp).toDouble())
+        sourceContext.recordMetric(
+            "pulsar_io_binlog_source_sync_delay_in_ms",
+            (Instant.now().toEpochMilli() - header.timestamp).toDouble()
+        )
         when (header.eventType) {
             EventType.ROTATE -> {
                 val data = event.getData<RotateEventData>()

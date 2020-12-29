@@ -28,10 +28,10 @@ class BinlogSink : Sink<ByteArray>, BinaryLogClient.EventListener {
         // Create jdbc connection
         Class.forName("com.mysql.cj.jdbc.Driver")
         connection = DriverManager.getConnection(
-                "jdbc:mysql://${sinkConfig.hostname}:${sinkConfig.port}" +
-                        "?user=${sinkConfig.username}&password=${sinkConfig.password}" +
-                        "&useSSL=false&serverTimezone=${sinkConfig.timezone}&useUnicode=true&characterEncoding=utf8" +
-                        "&yearIsDateType=false&tinyInt1isBit=false&disableMariaDbDriver=true",
+            "jdbc:mysql://${sinkConfig.hostname}:${sinkConfig.port}" +
+                    "?user=${sinkConfig.username}&password=${sinkConfig.password}" +
+                    "&useSSL=false&serverTimezone=${sinkConfig.timezone}&useUnicode=true&characterEncoding=utf8" +
+                    "&yearIsDateType=false&tinyInt1isBit=false&disableMariaDbDriver=true",
         ).also { it.autoCommit = false } // Disable auto commit
     }
 

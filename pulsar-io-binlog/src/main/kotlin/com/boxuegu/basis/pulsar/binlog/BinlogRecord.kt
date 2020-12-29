@@ -9,8 +9,8 @@ private val LOGGER = LoggerFactory.getLogger(BinlogRecord::class.java)
 private val GSON = GsonBuilder().registerBinlogEventAdapter().create()
 
 class BinlogRecord(
-        private val events: Array<Event>,
-        private val commit: () -> Unit,
+    private val events: Array<Event>,
+    private val commit: () -> Unit,
 ) : Record<ByteArray> {
     override fun getValue(): ByteArray {
         try {

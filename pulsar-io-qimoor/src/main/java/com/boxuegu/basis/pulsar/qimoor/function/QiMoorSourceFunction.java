@@ -53,8 +53,7 @@ public class QiMoorSourceFunction implements Function<byte[], Void> {
         if (qiMoorSourceFunctionConfig.getCloseSessionTopicName() == null || qiMoorSourceFunctionConfig.getCourseTypes() == null ||
                 qiMoorSourceFunctionConfig.getJdbcUrl() == null || qiMoorSourceFunctionConfig.getPassword() == null ||
                 qiMoorSourceFunctionConfig.getTableName() == null || qiMoorSourceFunctionConfig.getUnCloseSessionTopicName() == null ||
-                qiMoorSourceFunctionConfig.getUserName() == null)
-        {
+                qiMoorSourceFunctionConfig.getUserName() == null) {
             throw new IllegalArgumentException(" Required parameters are not set... Please check the startup script !!! ");
         }
         QiMoorWebChat qiMoorWebChat = gson.fromJson(new String(input), QiMoorWebChat.class);

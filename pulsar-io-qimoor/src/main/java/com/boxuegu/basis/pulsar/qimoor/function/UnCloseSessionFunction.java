@@ -39,7 +39,7 @@ public class UnCloseSessionFunction implements Function<byte[], Void> {
         UnCloseSessionFunctionConfig unCloseSessionFunctionConfig = UnCloseSessionFunctionConfig.load(context.getUserConfigMap());
         if (unCloseSessionFunctionConfig.getApiAdapterUrl() == null || unCloseSessionFunctionConfig.getCollectQimoor() == null ||
                 unCloseSessionFunctionConfig.getJdbcUrl() == null || unCloseSessionFunctionConfig.getMaxRetryTimes() == null ||
-                unCloseSessionFunctionConfig.getPassword() == null || unCloseSessionFunctionConfig.getCourseTypes() == null){
+                unCloseSessionFunctionConfig.getPassword() == null || unCloseSessionFunctionConfig.getCourseTypes() == null) {
             throw new IllegalArgumentException(" Required parameters are not set... Please check the startup script !!! ");
         }
 
@@ -76,7 +76,7 @@ public class UnCloseSessionFunction implements Function<byte[], Void> {
             log.error("[unCloseSessionFunction] got IllegalAccessException");
             return null;
         }
-        List<QiMoorWebChat> webChats = getQiMoorWebChat(jsonObject, idWorker,gson);
+        List<QiMoorWebChat> webChats = getQiMoorWebChat(jsonObject, idWorker, gson);
         if (!(webChats == null || webChats.isEmpty())) {
             webChats.forEach(webChat -> {
                 if (!webChat.getStatus().equalsIgnoreCase("finish") && !webChat.getStatus().equalsIgnoreCase("invalid")) {

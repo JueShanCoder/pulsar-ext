@@ -1,14 +1,12 @@
 # Pulsar IO Binlog
 
-
 # TODOs
 
 - [ ] 持久化BinlogOffset
-  - [ ] 事务提交/回滚操作判断
+    - [ ] 事务提交/回滚操作判断
 - [ ] 如何判断一个Query事件是DDL事件
-  - [x] 过滤`BEGIN`和`COMMIT`语句
+    - [x] 过滤`BEGIN`和`COMMIT`语句
 - [ ] ~~Dml事件没有列名信息，如何保证脱敏函数的兼容性~~
-
 
 ## Source
 

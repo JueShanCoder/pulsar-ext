@@ -37,7 +37,13 @@ class JdbcSink : Sink<ByteArray> {
     }
 
     override fun write(record: Record<ByteArray>) {
-        LOGGER.info("ACTION: {}, TARGET: {}, ENTITY: {}, RECORD: {}", record.action, record.target, record.entity, record::class)
+        LOGGER.info(
+            "ACTION: {}, TARGET: {}, ENTITY: {}, RECORD: {}",
+            record.action,
+            record.target,
+            record.entity,
+            record::class
+        )
         val sql = connection.buildSQL(record.target, record.action, record.entity, record.sqlMode)
         val statement = connection.prepareStatement(sql)
         LOGGER.info("STATEMENT: {}", sql)
@@ -58,7 +64,8 @@ inline val Record<ByteArray>.action: JdbcAction
     get() = JdbcAction.valueOf(properties.getOrDefault("ACTION", "INSERT"))
 
 inline val Record<ByteArray>.target: String
-    get() = properties["TARGET"] ?: throw IllegalArgumentException("Required property 'TARGET' for action '$action' not set.")
+    get() = properties["TARGET"]
+        ?: throw IllegalArgumentException("Required property 'TARGET' for action '$action' not set.")
 
 inline val Record<ByteArray>.entity: JsonElement
     get() = JsonParser().parse(String(value))

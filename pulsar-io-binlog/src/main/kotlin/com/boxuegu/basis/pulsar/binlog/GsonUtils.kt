@@ -41,7 +41,10 @@ class ColumnAdapter : JsonSerializer<DmlEventData.Column>, JsonDeserializer<DmlE
         val v = if (!o.has("value.type")) {
             null
         } else {
-            context.deserialize<Serializable>(o.get("value"), Class.forName(o.getAsJsonPrimitive("value.type").asString))
+            context.deserialize<Serializable>(
+                o.get("value"),
+                Class.forName(o.getAsJsonPrimitive("value.type").asString)
+            )
         }
         return DmlEventData.Column(i.asInt, t.asByte, v, n.asBoolean, m.asInt)
     }
@@ -80,6 +83,6 @@ class EventAdapter : JsonSerializer<Event>, JsonDeserializer<Event> {
 }
 
 fun GsonBuilder.registerBinlogEventAdapter(): GsonBuilder = this
-        .registerTypeAdapter(ByteArray::class.java, ByteArrayAdapter())
-        .registerTypeAdapter(DmlEventData.Column::class.java, ColumnAdapter())
-        .registerTypeAdapter(Event::class.java, EventAdapter())
+    .registerTypeAdapter(ByteArray::class.java, ByteArrayAdapter())
+    .registerTypeAdapter(DmlEventData.Column::class.java, ColumnAdapter())
+    .registerTypeAdapter(Event::class.java, EventAdapter())

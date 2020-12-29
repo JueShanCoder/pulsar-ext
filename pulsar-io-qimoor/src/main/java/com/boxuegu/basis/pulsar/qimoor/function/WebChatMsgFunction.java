@@ -35,10 +35,11 @@ import static com.boxuegu.basis.pulsar.qimoor.utils.TimeUtil.getISO8601TimeByStr
  */
 @Slf4j
 public class WebChatMsgFunction implements Function<byte[], Void> {
-    private  WebChatMsgFunctionConfig webChatMsgFunctionConfig;
+    private WebChatMsgFunctionConfig webChatMsgFunctionConfig;
     private IdWorker idWorker;
 
     Gson gson = GsonBuilderUtil.create(true);
+
     @Override
     public Void process(byte[] input, Context context) throws InterruptedException {
 
@@ -46,12 +47,12 @@ public class WebChatMsgFunction implements Function<byte[], Void> {
         if (webChatMsgFunctionConfig.getSnowflakeClusterId() == null || webChatMsgFunctionConfig.getSnowflakeWorkerId() == null ||
                 webChatMsgFunctionConfig.getWebChatMsgTopicName() == null || webChatMsgFunctionConfig.getTableName() == null ||
                 webChatMsgFunctionConfig.getMaxRetryTimes() == null || webChatMsgFunctionConfig.getRetryTime() == null ||
-                webChatMsgFunctionConfig.getCollectQimoor() == null || webChatMsgFunctionConfig.getApiAdapterUrl() == null ){
+                webChatMsgFunctionConfig.getCollectQimoor() == null || webChatMsgFunctionConfig.getApiAdapterUrl() == null) {
             throw new IllegalArgumentException(" Required parameters are not set... Please check the startup script !!! ");
         }
 
         try {
-            idWorker = new IdWorker(webChatMsgFunctionConfig.getSnowflakeClusterId(),webChatMsgFunctionConfig.getSnowflakeWorkerId());
+            idWorker = new IdWorker(webChatMsgFunctionConfig.getSnowflakeClusterId(), webChatMsgFunctionConfig.getSnowflakeWorkerId());
         } catch (IllegalAccessException e) {
             throw new IllegalArgumentException(" Snowflake initialization fail ... ");
         }

@@ -8,9 +8,9 @@ import java.nio.ByteBuffer
 private val GSON = Gson()
 
 data class BinlogOffset(
-        var filename: String? = null,
-        var position: Long = 4L,
-        var gtidSet: String? = null,
+    var filename: String? = null,
+    var position: Long = 4L,
+    var gtidSet: String? = null,
 ) : Serializable
 
 fun SourceContext.getBinlogOffset(key: String): BinlogOffset? {

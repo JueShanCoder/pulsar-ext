@@ -25,11 +25,11 @@ enum class JdbcAction {
 }
 
 data class JdbcColumn(
-        val name: String,
-        val type: Int,
-        val isKey: Boolean,
-        val nullable: Boolean,
-        val unsigned: Boolean,
+    val name: String,
+    val type: Int,
+    val isKey: Boolean,
+    val nullable: Boolean,
+    val unsigned: Boolean,
 ) {
     override fun toString(): String {
         return "JdbcColumn(name='$name', type=${JDBCType.valueOf(type).name}, isKey=$isKey, nullable=$nullable, unsigned=$unsigned)"
@@ -68,10 +68,10 @@ data class JdbcColumn(
 }
 
 data class JdbcTable(
-        val catalog: String,
-        val schema: String,
-        val name: String,
-        val columns: List<JdbcColumn>,
+    val catalog: String,
+    val schema: String,
+    val name: String,
+    val columns: List<JdbcColumn>,
 ) {
     val keys: List<JdbcColumn> by lazy { columns.filter(JdbcColumn::isKey) }
 
@@ -85,12 +85,11 @@ data class JdbcTable(
 }
 
 data class JdbcField(
-        val name: String,
-        val type: Int,
-        val isKey: Boolean,
-        val value: Any?,
-
-        ) {
+    val name: String,
+    val type: Int,
+    val isKey: Boolean,
+    val value: Any?,
+) {
     override fun toString(): String {
         return "JdbcField(name='$name', type=${JDBCType.valueOf(type).name}, isKey=$isKey, value=$value)"
     }
@@ -115,11 +114,11 @@ fun DatabaseMetaData.loadTable(target: String): JdbcTable {
             val cols = getColumns(catalog, schema, name, null).use {
                 generateSequence {
                     if (it.next()) JdbcColumn(
-                            it.getString(4),
-                            it.getInt(5),
-                            keys.contains(it.getString(4)),
-                            it.getString(18) == "YES",
-                            it.getString(6).contains("UNSIGNED", true)
+                        it.getString(4),
+                        it.getInt(5),
+                        keys.contains(it.getString(4)),
+                        it.getString(18) == "YES",
+                        it.getString(6).contains("UNSIGNED", true)
                     ) else null
                 }.toList()
             }
@@ -177,10 +176,22 @@ fun Connection.buildSQL(target: String, action: JdbcAction, entity: JsonElement,
                 }
                 JdbcDriver.MYSQL.value,
                 JdbcDriver.MARIADB.value -> {
-                    "INSERT INTO ${t(table)} (${fields.joinToString { q(it.key) }}) VALUES (${fields.joinToString { "?" }}) ON DUPLICATE KEY UPDATE ${nonKeys.joinToString { "${q(it.key)}=?" }}"
+                    "INSERT INTO ${t(table)} (${fields.joinToString { q(it.key) }}) VALUES (${fields.joinToString { "?" }}) ON DUPLICATE KEY UPDATE ${
+                        nonKeys.joinToString {
+                            "${
+                                q(
+                                    it.key
+                                )
+                            }=?"
+                        }
+                    }"
                 }
                 JdbcDriver.POSTGRESQL.value -> {
-                    "INSERT INTO ${t(table)} (${fields.joinToString { q(it.key) }}) VALUES (${fields.joinToString { "?" }}) ON CONFLICT(${k(table)}) DO UPDATE SET ${nonKeys.joinToString { "${q(it.key)}=?" }}"
+                    "INSERT INTO ${t(table)} (${fields.joinToString { q(it.key) }}) VALUES (${fields.joinToString { "?" }}) ON CONFLICT(${
+                        k(
+                            table
+                        )
+                    }) DO UPDATE SET ${nonKeys.joinToString { "${q(it.key)}=?" }}"
                 }
                 else -> {
                     throw java.lang.IllegalArgumentException("Unsupported action $action with JDBC driver ${metaData.driverName}")
@@ -206,7 +217,8 @@ fun Connection.buildSQL(target: String, action: JdbcAction, entity: JsonElement,
 
 fun PreparedStatement.setDate(index: Int, date: LocalDate) = setDate(index, java.sql.Date.valueOf(date))
 fun PreparedStatement.setTime(index: Int, time: LocalTime) = setTime(index, Time.valueOf(time))
-fun PreparedStatement.setTimestamp(index: Int, datetime: LocalDateTime) = setTimestamp(index, Timestamp.valueOf(datetime))
+fun PreparedStatement.setTimestamp(index: Int, datetime: LocalDateTime) =
+    setTimestamp(index, Timestamp.valueOf(datetime))
 
 fun PreparedStatement.setParam(index: Int, field: JdbcField) {
     if (field.value == null) setNull(index, field.type) else when (field.type) {
@@ -215,7 +227,10 @@ fun PreparedStatement.setParam(index: Int, field: JdbcField) {
         Types.TINYINT -> if (field.value is Short) setShort(index, field.value) else setByte(index, field.value as Byte)
         Types.SMALLINT -> if (field.value is Int) setInt(index, field.value) else setShort(index, field.value as Short)
         Types.INTEGER -> if (field.value is Long) setLong(index, field.value) else setInt(index, field.value as Int)
-        Types.BIGINT -> if (field.value is BigInteger) setBigDecimal(index, field.value.toBigDecimal()) else setLong(index, field.value as Long)
+        Types.BIGINT -> if (field.value is BigInteger) setBigDecimal(index, field.value.toBigDecimal()) else setLong(
+            index,
+            field.value as Long
+        )
         Types.FLOAT -> setFloat(index, field.value as Float)
         Types.REAL,
         Types.DOUBLE -> setDouble(index, field.value as Double)

@@ -70,9 +70,7 @@ public class QiMoorSource extends PushSource<byte[]> {
             throw new IllegalArgumentException(" Required parameters are not set... Please check the startup script !!! ");
         }
 
-        Executors.newSingleThreadExecutor().submit(() -> {
-            taskJob(sourceContext);
-        });
+        Executors.newSingleThreadExecutor().submit(() -> taskJob(sourceContext));
     }
 
     private void taskJob(SourceContext sourceContext) {
@@ -122,7 +120,7 @@ public class QiMoorSource extends PushSource<byte[]> {
                     endTime.set(TimeUtil.getNowWithNoSecond());
                     sourceContext.putState(stateKey, string2ByteBuffer(beginTime + "_" + endTime + "_" + pageNum, StandardCharsets.UTF_8));
                 } else {
-                    List<QiMoorWebChat> qiMoorWebChat = getQiMoorWebChat(jsonObject, idWorker,gson);
+                    List<QiMoorWebChat> qiMoorWebChat = getQiMoorWebChat(jsonObject, idWorker, gson);
                     if (!(qiMoorWebChat == null || qiMoorWebChat.isEmpty())) {
                         qiMoorWebChat.forEach(webChat -> consume(new QiMoorSourceRecord(webChat,
                                 (v) -> {
@@ -207,6 +205,5 @@ public class QiMoorSource extends PushSource<byte[]> {
 
     @Override
     public void close() throws Exception {
-
     }
 }

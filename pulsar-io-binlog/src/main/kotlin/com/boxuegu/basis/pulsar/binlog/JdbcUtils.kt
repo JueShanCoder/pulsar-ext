@@ -17,9 +17,9 @@ fun Connection.loadBinlogOffset(): BinlogOffset {
     val rs = this.createStatement().executeQuery("SHOW MASTER STATUS")
     return if (rs.next()) {
         BinlogOffset(
-                rs.getString(1),
-                rs.getLong(2),
-                rs.getString(5)
+            rs.getString(1),
+            rs.getLong(2),
+            rs.getString(5)
         )
     } else {
         BinlogOffset()
@@ -33,13 +33,13 @@ fun Connection.setDatabase(database: String?) {
 }
 
 data class JdbcColumn(
-        val name: String,
-        val type: Int,
-        val size: Int,
-        val index: Int,
-        val isKey: Boolean,
-        val nullable: Boolean,
-        val unsigned: Boolean,
+    val name: String,
+    val type: Int,
+    val size: Int,
+    val index: Int,
+    val isKey: Boolean,
+    val nullable: Boolean,
+    val unsigned: Boolean,
 ) {
     override fun toString(): String {
         return "JdbcColumn(name='$name', type=${JDBCType.valueOf(type).name}, size=$size, isKey=$isKey, nullable=$nullable, unsigned=$unsigned)"
@@ -47,10 +47,10 @@ data class JdbcColumn(
 }
 
 data class JdbcTable(
-        val catalog: String,
-        val schema: String,
-        val name: String,
-        val columns: List<JdbcColumn>
+    val catalog: String,
+    val schema: String,
+    val name: String,
+    val columns: List<JdbcColumn>,
 ) {
     val keys: List<JdbcColumn> by lazy { columns.filter(JdbcColumn::isKey) }
 
@@ -60,18 +60,18 @@ data class JdbcTable(
 
     fun parseFields(row: List<DmlEventData.Column>): List<JdbcField> = row.map {
         val c = columns.singleOrNull() { jc -> jc.index == it.index }
-                ?: throw IllegalStateException("Unknown column in table '${name}' at index ${it.index}")
+            ?: throw IllegalStateException("Unknown column in table '${name}' at index ${it.index}")
         JdbcField(c.name, c.type, it.type, c.isKey, it.value, c.unsigned)
     }
 }
 
 data class JdbcField(
-        val name: String,
-        val type: Int,
-        val bType: Byte,
-        val isKey: Boolean,
-        val value: Any?,
-        val unsigned: Boolean,
+    val name: String,
+    val type: Int,
+    val bType: Byte,
+    val isKey: Boolean,
+    val value: Any?,
+    val unsigned: Boolean,
 ) {
     override fun toString(): String {
         return "JdbcField(name='$name', type=${JDBCType.valueOf(type).name}, bType=${ColumnType.byCode(bType.toInt() and 0xff)}, isKey=$isKey, value=$value)"
@@ -89,13 +89,13 @@ fun DatabaseMetaData.loadTable(database: String, tableName: String): JdbcTable {
             val cols = getColumns(catalog, null, name, null).use {
                 generateSequence {
                     if (it.next()) JdbcColumn(
-                            it.getString(4),
-                            it.getInt(5),
-                            it.getInt(7),
-                            it.getInt(17),
-                            keys.contains(it.getString(4)),
-                            it.getString(18).equals("YES", true),
-                            it.getString(6).contains("UNSIGNED", true)
+                        it.getString(4),
+                        it.getInt(5),
+                        it.getInt(7),
+                        it.getInt(17),
+                        keys.contains(it.getString(4)),
+                        it.getString(18).equals("YES", true),
+                        it.getString(6).contains("UNSIGNED", true)
                     ) else null
                 }.toList()
             }
@@ -226,7 +226,9 @@ private fun Connection.relayDmlEventData(data: DmlEventData) {
             // keys before
             val ksb = table.parseFields(data.rowsBefore[i]).filter { it.isKey }
             // prepare statement
-            val sql = this.prepareStatement("UPDATE ${t(table)} SET ${fsa.joinToString { "${q(it.name)} = ?" }} WHERE ${p(table)}")
+            val sql = this.prepareStatement(
+                "UPDATE ${t(table)} SET ${fsa.joinToString { "${q(it.name)} = ?" }} WHERE ${p(table)}"
+            )
             // set params
             sql.setParams(fsa + ksb)
             sql.executeUpdate()

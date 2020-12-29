@@ -6,7 +6,8 @@ import java.sql.DriverManager
 class JdbcUtilsH2Tests : JdbcUtilsTests() {
     override fun setup(): Connection {
         connection = DriverManager.getConnection("jdbc:h2:mem:test")
-        connection.prepareStatement("""
+        connection.prepareStatement(
+            """
             CREATE TABLE IF NOT EXISTS "samples"
             (
                 "id"              BIGINT,
@@ -33,7 +34,8 @@ class JdbcUtilsH2Tests : JdbcUtilsTests() {
                 "f_timestamp"     TIMESTAMP,
                 CONSTRAINT SAMPLES_PK PRIMARY KEY ("id")
             );
-        """.trimIndent()).execute()
+        """.trimIndent()
+        ).execute()
         return connection
     }
 }
