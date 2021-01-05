@@ -60,6 +60,7 @@ public class QiMoorSource extends PushSource<byte[]> {
     private Integer clusterId;
     private Integer workerId;
     private Connection connection;
+    private String databaseName;
     final Gson gson = GsonBuilderUtil.create(false);
 
     @Override
@@ -68,6 +69,7 @@ public class QiMoorSource extends PushSource<byte[]> {
         String jdbcUrl = qiMoorSourceConfig.getJdbcUrl();
         String password = qiMoorSourceConfig.getPassword();
         String userName = qiMoorSourceConfig.getUserName();
+        databaseName = qiMoorSourceConfig.getDatabaseName();
         apiAdapterUrl = qiMoorSourceConfig.getApiAdapterUrl();
         collectQimoor = qiMoorSourceConfig.getCollectQimoor();
         offsetBeginTime = qiMoorSourceConfig.getOffsetBeginTime();
@@ -79,7 +81,7 @@ public class QiMoorSource extends PushSource<byte[]> {
         JdbcService jdbcService = new JdbcServiceImpl();
         if (apiAdapterUrl == null || collectQimoor == null || offsetBeginTime == null || timeDiff == null ||
                 isOpenTimeDiff == null || stateKey == null || clusterId == null || workerId == null ||
-                jdbcUrl == null || userName == null || password == null) {
+                jdbcUrl == null || userName == null || password == null || databaseName == null) {
             throw new IllegalArgumentException(" Required parameters are not set... Please check the startup script !!! ");
         }
         try {
@@ -123,10 +125,10 @@ public class QiMoorSource extends PushSource<byte[]> {
 
                 // state storage by mysql
                 GetObjectService getObjectService = new GetStateServiceImpl();
-                WebChatState webChatState = (WebChatState) getObjectService.getObject(connection, GetStateSQL(stateKey));
+                WebChatState webChatState = (WebChatState) getObjectService.getObject(connection, GetStateSQL(databaseName,stateKey));
                 if (webChatState == null) {
-                    insertState(connection, stateKey, null);
-                    webChatState = (WebChatState) getObjectService.getObject(connection, GetStateSQL(stateKey));
+                    insertState(connection, databaseName ,stateKey, null);
+                    webChatState = (WebChatState) getObjectService.getObject(connection, GetStateSQL(databaseName,stateKey));
                 }
                 String stateValue = webChatState.getValue();
                 if (stateValue != null) {
@@ -265,7 +267,7 @@ public class QiMoorSource extends PushSource<byte[]> {
 
     private void updateOperation(String stateKey, String stateValue) {
         try {
-            int i = GetStateServiceImpl.updateState(connection, stateKey, stateValue);
+            int i = GetStateServiceImpl.updateState(connection, databaseName, stateKey, stateValue);
             if (!(i > 0)) {
                 log.info(" [ update database fail , Please check the params !!!] ");
             }

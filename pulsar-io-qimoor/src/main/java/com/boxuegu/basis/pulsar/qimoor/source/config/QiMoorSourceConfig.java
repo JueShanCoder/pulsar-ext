@@ -103,6 +103,15 @@ public class QiMoorSourceConfig implements Serializable {
     )
     private Boolean isOpenTimeDiff;
 
+    @FieldDoc(
+            required = true,
+            defaultValue = "",
+            sensitive = true,
+            help = " database name  "
+    )
+    private String databaseName;
+
+
     public static QiMoorSourceConfig load(Map<String, Object> map) {
         Gson gson = new Gson();
         return gson.fromJson(gson.toJsonTree(map), QiMoorSourceConfig.class);

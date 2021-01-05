@@ -316,12 +316,4 @@ public class TimeUtil {
         long to2 = toDate2.getTime();
         return (int) ((to2 - from2) / 1000);
     }
-
-    public static void main(String[] args) throws Exception {
-//        Date date = new Date();
-//        String s = "2019-02-01 11:11:11";
-//        System.out.println(getISO8601Timestamp(date));
-//        System.out.println(getISO8601TimeByStr(s));
-        System.out.println(timeDiff("2020-09-14 17:55:00", "2020-09-14 17:56:01"));
-    }
 }

@@ -35,10 +35,10 @@ public class GetStateServiceImpl implements GetObjectService {
     }
 
 
-    public static int updateState(Connection connection, String stateKey, String stateValues) throws Exception {
+    public static int updateState(Connection connection,String databaseName, String stateKey, String stateValues) throws Exception {
         PreparedStatement preparedStatement = null;
         try {
-            String sql = "UPDATE `web_chat_status` SET `value` = ? WHERE `key` = ?";
+            String sql = "UPDATE `"+ databaseName+"`.`web_chat_status` SET `value` = ? WHERE `key` = ?";
 
             preparedStatement = connection.prepareStatement(sql);
             preparedStatement.setString(1, stateValues);
@@ -49,10 +49,10 @@ public class GetStateServiceImpl implements GetObjectService {
         }
     }
 
-    public static int insertState(Connection connection, String stateKey, String stateValues) throws Exception {
+    public static int insertState(Connection connection,String databaseName, String stateKey, String stateValues) throws Exception {
         PreparedStatement preparedStatement = null;
         try {
-            String sql = "INSERT INTO `web_chat_status`(`key`, `value`) VALUES (?, ?)";
+            String sql = "INSERT INTO `"+ databaseName +"`.`web_chat_status`(`key`, `value`) VALUES (?, ?)";
 
             preparedStatement = connection.prepareStatement(sql);
             preparedStatement.setString(1, stateKey);
@@ -64,7 +64,7 @@ public class GetStateServiceImpl implements GetObjectService {
     }
 
 
-    public static String GetStateSQL(String stateKey) {
-        return "SELECT `key`, `value` FROM `web_chat_status` WHERE `key` = '" + stateKey + "'";
+    public static String GetStateSQL(String databaseName, String stateKey) {
+        return "SELECT `key`, `value` FROM `" +databaseName+ "`.`web_chat_status` WHERE `key` = '" + stateKey + "'";
     }
 }
