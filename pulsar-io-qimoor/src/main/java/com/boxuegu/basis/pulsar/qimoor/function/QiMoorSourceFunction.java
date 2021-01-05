@@ -45,7 +45,7 @@ import static com.boxuegu.basis.pulsar.qimoor.utils.UrlParsingUtils.*;
 @Slf4j
 public class QiMoorSourceFunction implements Function<byte[], Void> {
 
-    Gson gson = GsonBuilderUtil.create(false);
+    final Gson gson = GsonBuilderUtil.create(false);
 
     @Override
     public Void process(byte[] input, Context context) {

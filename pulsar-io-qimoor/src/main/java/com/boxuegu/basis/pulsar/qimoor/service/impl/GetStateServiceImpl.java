@@ -45,32 +45,26 @@ public class GetStateServiceImpl implements GetObjectService {
             preparedStatement.setString(2, stateKey);
             return preparedStatement.executeUpdate();
         } finally {
-            closeSession(null,null,preparedStatement);
+            closeSession(null, null, preparedStatement);
         }
     }
 
     public static int insertState(Connection connection, String stateKey, String stateValues) throws Exception {
         PreparedStatement preparedStatement = null;
         try {
-            String sql = "INSERT INTO `web_chat_status`(`key`, `value`) VALUES (?,?)";
+            String sql = "INSERT INTO `web_chat_status`(`key`, `value`) VALUES (?, ?)";
 
             preparedStatement = connection.prepareStatement(sql);
             preparedStatement.setString(1, stateKey);
             preparedStatement.setString(2, stateValues);
             return preparedStatement.executeUpdate();
         } finally {
-            closeSession(null,null,preparedStatement);
+            closeSession(null, null, preparedStatement);
         }
     }
 
 
-    public static String GetStateSQL(String stateKey){
-        return "SELECT\n" +
-                "\t`key`,\n" +
-                "\t`value` \n" +
-                "FROM\n" +
-                "\t`d_bxg_dvb`.`web_chat_status` \n" +
-                "WHERE\n" +
-                "\t`key` = '" + stateKey + "'";
+    public static String GetStateSQL(String stateKey) {
+        return "SELECT `key`, `value` FROM `web_chat_status` WHERE `key` = '" + stateKey + "'";
     }
 }

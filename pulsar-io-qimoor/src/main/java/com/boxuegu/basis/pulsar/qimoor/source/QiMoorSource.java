@@ -60,7 +60,7 @@ public class QiMoorSource extends PushSource<byte[]> {
     private Integer clusterId;
     private Integer workerId;
     private Connection connection;
-    Gson gson = GsonBuilderUtil.create(false);
+    final Gson gson = GsonBuilderUtil.create(false);
 
     @Override
     public void open(Map<String, Object> config, SourceContext sourceContext) {
@@ -84,7 +84,7 @@ public class QiMoorSource extends PushSource<byte[]> {
         }
         try {
             connection = jdbcService.getConnection(jdbcUrl, userName, password);
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new IllegalArgumentException(" connection database fail ... Please check the database link !!!");
         }
         Executors.newSingleThreadExecutor().submit(() -> taskJob(sourceContext));
@@ -123,13 +123,13 @@ public class QiMoorSource extends PushSource<byte[]> {
 
                 // state storage by mysql
                 GetObjectService getObjectService = new GetStateServiceImpl();
-                WebChatState webChatState = (WebChatState) getObjectService.getObject(connection,GetStateSQL(stateKey));
+                WebChatState webChatState = (WebChatState) getObjectService.getObject(connection, GetStateSQL(stateKey));
                 if (webChatState == null) {
                     insertState(connection, stateKey, null);
-                    webChatState = (WebChatState) getObjectService.getObject(connection,GetStateSQL(stateKey));
+                    webChatState = (WebChatState) getObjectService.getObject(connection, GetStateSQL(stateKey));
                 }
                 String stateValue = webChatState.getValue();
-                if (stateValue != null){
+                if (stateValue != null) {
                     String[] offSet = stateValue.split("_");
                     beginTime.set(offSet[0]);
                     endTime.set(offSet[1]);
@@ -161,7 +161,7 @@ public class QiMoorSource extends PushSource<byte[]> {
                     // state storage by BK
 //                    sourceContext.putState(stateKey, string2ByteBuffer(beginTime + "_" + endTime + "_" + pageNum, StandardCharsets.UTF_8));
                     // state storage by mysql
-                    updateOperation(stateKey,beginTime + "_" + endTime + "_" + pageNum);
+                    updateOperation(stateKey, beginTime + "_" + endTime + "_" + pageNum);
                 } else {
                     List<QiMoorWebChat> qiMoorWebChat = getQiMoorWebChat(jsonObject, idWorker, gson);
                     if (!(qiMoorWebChat == null || qiMoorWebChat.isEmpty())) {
@@ -177,7 +177,7 @@ public class QiMoorSource extends PushSource<byte[]> {
 //                                        sourceContext.putState(stateKey, string2ByteBuffer(beginTime.get() + "_" + endTime.get() + "_" + pageNum.get(), StandardCharsets.UTF_8));
 
                                         // state storage by mysql
-                                        updateOperation(stateKey,beginTime.get() + "_" + endTime.get() + "_" + pageNum.get());
+                                        updateOperation(stateKey, beginTime.get() + "_" + endTime.get() + "_" + pageNum.get());
                                     }
                                 },
                                 (v) -> {
@@ -189,7 +189,7 @@ public class QiMoorSource extends PushSource<byte[]> {
 
                                     // state storage by mysql
                                     String state = byteBuffer2String(paramsMap.get(stateKey), StandardCharsets.UTF_8);
-                                    updateOperation(stateKey,state);
+                                    updateOperation(stateKey, state);
 
                                 })));
                     }
@@ -263,14 +263,14 @@ public class QiMoorSource extends PushSource<byte[]> {
         }
     }
 
-    private void updateOperation(String stateKey, String stateValue){
+    private void updateOperation(String stateKey, String stateValue) {
         try {
             int i = GetStateServiceImpl.updateState(connection, stateKey, stateValue);
-            if (!(i > 0)){
+            if (!(i > 0)) {
                 log.info(" [ update database fail , Please check the params !!!] ");
             }
-        }catch (Exception e){
-            log.error(" [ update state got error... ] ",e);
+        } catch (Exception e) {
+            log.error(" [ update state got error... ] ", e);
         }
 
     }
