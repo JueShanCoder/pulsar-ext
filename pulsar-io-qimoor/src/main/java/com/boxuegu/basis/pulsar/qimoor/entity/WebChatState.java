@@ -10,8 +10,8 @@ public class WebChatState {
 
     private Long id;
 
-    private String stateKey;
+    private String key;
 
-    private String stateValue;
+    private String value;
 
 }

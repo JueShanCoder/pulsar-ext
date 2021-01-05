@@ -36,6 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.boxuegu.basis.pulsar.qimoor.service.impl.GetStateServiceImpl.GetStateSQL;
+import static com.boxuegu.basis.pulsar.qimoor.service.impl.GetStateServiceImpl.insertState;
 import static com.boxuegu.basis.pulsar.qimoor.utils.ConvertBuffer.byteBuffer2String;
 import static com.boxuegu.basis.pulsar.qimoor.utils.ConvertBuffer.string2ByteBuffer;
 import static com.boxuegu.basis.pulsar.qimoor.utils.TimeUtil.timeDiff;
@@ -122,8 +123,12 @@ public class QiMoorSource extends PushSource<byte[]> {
 
                 // state storage by mysql
                 GetObjectService getObjectService = new GetStateServiceImpl();
-                WebChatState webChatState = (WebChatState) getObjectService.getObject(connection,GetStateSQL(1L));
-                String stateValue = webChatState.getStateValue();
+                WebChatState webChatState = (WebChatState) getObjectService.getObject(connection,GetStateSQL(stateKey));
+                if (webChatState == null) {
+                    insertState(connection, stateKey, null);
+                    webChatState = (WebChatState) getObjectService.getObject(connection,GetStateSQL(stateKey));
+                }
+                String stateValue = webChatState.getValue();
                 if (stateValue != null){
                     String[] offSet = stateValue.split("_");
                     beginTime.set(offSet[0]);
@@ -156,7 +161,7 @@ public class QiMoorSource extends PushSource<byte[]> {
                     // state storage by BK
 //                    sourceContext.putState(stateKey, string2ByteBuffer(beginTime + "_" + endTime + "_" + pageNum, StandardCharsets.UTF_8));
                     // state storage by mysql
-                    updateOperation(1L,beginTime + "_" + endTime + "_" + pageNum);
+                    updateOperation(stateKey,beginTime + "_" + endTime + "_" + pageNum);
                 } else {
                     List<QiMoorWebChat> qiMoorWebChat = getQiMoorWebChat(jsonObject, idWorker, gson);
                     if (!(qiMoorWebChat == null || qiMoorWebChat.isEmpty())) {
@@ -172,7 +177,7 @@ public class QiMoorSource extends PushSource<byte[]> {
 //                                        sourceContext.putState(stateKey, string2ByteBuffer(beginTime.get() + "_" + endTime.get() + "_" + pageNum.get(), StandardCharsets.UTF_8));
 
                                         // state storage by mysql
-                                        updateOperation(1L,beginTime.get() + "_" + endTime.get() + "_" + pageNum.get());
+                                        updateOperation(stateKey,beginTime.get() + "_" + endTime.get() + "_" + pageNum.get());
                                     }
                                 },
                                 (v) -> {
@@ -184,7 +189,7 @@ public class QiMoorSource extends PushSource<byte[]> {
 
                                     // state storage by mysql
                                     String state = byteBuffer2String(paramsMap.get(stateKey), StandardCharsets.UTF_8);
-                                    updateOperation(1L,state);
+                                    updateOperation(stateKey,state);
 
                                 })));
                     }
@@ -258,15 +263,14 @@ public class QiMoorSource extends PushSource<byte[]> {
         }
     }
 
-    private void updateOperation(Long id, String stateValue){
+    private void updateOperation(String stateKey, String stateValue){
         try {
-            int i = GetStateServiceImpl.updateState(connection, id, stateValue);
+            int i = GetStateServiceImpl.updateState(connection, stateKey, stateValue);
             if (!(i > 0)){
                 log.info(" [ update database fail , Please check the params !!!] ");
             }
         }catch (Exception e){
-            e.printStackTrace();
-            log.error(" [ update state got error... ] ");
+            log.error(" [ update state got error... ] ",e);
         }
 
     }

@@ -8,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 
 import static com.boxuegu.basis.pulsar.qimoor.service.impl.JdbcServiceImpl.closeSession;
 import static com.boxuegu.basis.pulsar.qimoor.service.impl.JdbcServiceImpl.convertResultToEntity;
@@ -36,13 +35,28 @@ public class GetStateServiceImpl implements GetObjectService {
     }
 
 
-    public static int updateState(Connection connection, Long id, String stateValues) throws Exception {
+    public static int updateState(Connection connection, String stateKey, String stateValues) throws Exception {
         PreparedStatement preparedStatement = null;
         try {
-            String sql = "UPDATE `web_chat_state` SET `state_value` = ? WHERE `id` = ?";
+            String sql = "UPDATE `web_chat_status` SET `value` = ? WHERE `key` = ?";
+
             preparedStatement = connection.prepareStatement(sql);
             preparedStatement.setString(1, stateValues);
-            preparedStatement.setLong(2, id);
+            preparedStatement.setString(2, stateKey);
+            return preparedStatement.executeUpdate();
+        } finally {
+            closeSession(null,null,preparedStatement);
+        }
+    }
+
+    public static int insertState(Connection connection, String stateKey, String stateValues) throws Exception {
+        PreparedStatement preparedStatement = null;
+        try {
+            String sql = "INSERT INTO `web_chat_status`(`key`, `value`) VALUES (?,?)";
+
+            preparedStatement = connection.prepareStatement(sql);
+            preparedStatement.setString(1, stateKey);
+            preparedStatement.setString(2, stateValues);
             return preparedStatement.executeUpdate();
         } finally {
             closeSession(null,null,preparedStatement);
@@ -50,13 +64,13 @@ public class GetStateServiceImpl implements GetObjectService {
     }
 
 
-    public static String GetStateSQL(Long id){
+    public static String GetStateSQL(String stateKey){
         return "SELECT\n" +
-                "\t`state_key`,\n" +
-                "\t`state_value` \n" +
+                "\t`key`,\n" +
+                "\t`value` \n" +
                 "FROM\n" +
-                "\t`d_bxg_dvb`.`web_chat_state` \n" +
+                "\t`d_bxg_dvb`.`web_chat_status` \n" +
                 "WHERE\n" +
-                "\t`id` = '" + id + "'";
+                "\t`key` = '" + stateKey + "'";
     }
 }
