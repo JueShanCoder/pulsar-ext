@@ -32,7 +32,7 @@ import static com.boxuegu.basis.pulsar.qimoor.source.QiMoorSource.getQiMoorWebCh
 @Slf4j
 public class UnCloseSessionFunction implements Function<byte[], Void> {
 
-    Gson gson = GsonBuilderUtil.create(false);
+    final Gson gson = GsonBuilderUtil.create(false);
 
     @Override
     public Void process(byte[] input, Context context) throws InterruptedException {

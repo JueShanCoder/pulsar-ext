@@ -2,6 +2,11 @@ package com.boxuegu.basis.pulsar.qimoor.source;
 
 import com.boxuegu.basis.pulsar.qimoor.client.QiMoorClient;
 import com.boxuegu.basis.pulsar.qimoor.entity.QiMoorWebChat;
+import com.boxuegu.basis.pulsar.qimoor.entity.WebChatState;
+import com.boxuegu.basis.pulsar.qimoor.service.GetObjectService;
+import com.boxuegu.basis.pulsar.qimoor.service.JdbcService;
+import com.boxuegu.basis.pulsar.qimoor.service.impl.GetStateServiceImpl;
+import com.boxuegu.basis.pulsar.qimoor.service.impl.JdbcServiceImpl;
 import com.boxuegu.basis.pulsar.qimoor.snowflake.IdWorker;
 import com.boxuegu.basis.pulsar.qimoor.source.config.QiMoorSourceConfig;
 import com.boxuegu.basis.pulsar.qimoor.source.record.QiMoorSourceRecord;
@@ -22,6 +27,7 @@ import org.apache.pulsar.io.core.annotations.IOType;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +35,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.boxuegu.basis.pulsar.qimoor.service.impl.GetStateServiceImpl.GetStateSQL;
+import static com.boxuegu.basis.pulsar.qimoor.service.impl.GetStateServiceImpl.insertState;
 import static com.boxuegu.basis.pulsar.qimoor.utils.ConvertBuffer.byteBuffer2String;
 import static com.boxuegu.basis.pulsar.qimoor.utils.ConvertBuffer.string2ByteBuffer;
 import static com.boxuegu.basis.pulsar.qimoor.utils.TimeUtil.timeDiff;
@@ -51,11 +59,17 @@ public class QiMoorSource extends PushSource<byte[]> {
     private Boolean isOpenTimeDiff;
     private Integer clusterId;
     private Integer workerId;
-    Gson gson = GsonBuilderUtil.create(false);
+    private Connection connection;
+    private String databaseName;
+    final Gson gson = GsonBuilderUtil.create(false);
 
     @Override
     public void open(Map<String, Object> config, SourceContext sourceContext) {
         QiMoorSourceConfig qiMoorSourceConfig = QiMoorSourceConfig.load(config);
+        String jdbcUrl = qiMoorSourceConfig.getJdbcUrl();
+        String password = qiMoorSourceConfig.getPassword();
+        String userName = qiMoorSourceConfig.getUserName();
+        databaseName = qiMoorSourceConfig.getDatabaseName();
         apiAdapterUrl = qiMoorSourceConfig.getApiAdapterUrl();
         collectQimoor = qiMoorSourceConfig.getCollectQimoor();
         offsetBeginTime = qiMoorSourceConfig.getOffsetBeginTime();
@@ -64,13 +78,19 @@ public class QiMoorSource extends PushSource<byte[]> {
         stateKey = qiMoorSourceConfig.getOffsetStateKey();
         clusterId = qiMoorSourceConfig.getSnowflakeClusterId();
         workerId = qiMoorSourceConfig.getSnowflakeWorkerId();
-
+        JdbcService jdbcService = new JdbcServiceImpl();
         if (apiAdapterUrl == null || collectQimoor == null || offsetBeginTime == null || timeDiff == null ||
-                isOpenTimeDiff == null || stateKey == null || clusterId == null || workerId == null) {
+                isOpenTimeDiff == null || stateKey == null || clusterId == null || workerId == null ||
+                jdbcUrl == null || userName == null || password == null || databaseName == null) {
             throw new IllegalArgumentException(" Required parameters are not set... Please check the startup script !!! ");
         }
-
+        try {
+            connection = jdbcService.getConnection(jdbcUrl, userName, password);
+        } catch (Exception e) {
+            throw new IllegalArgumentException(" connection database fail ... Please check the database link !!!");
+        }
         Executors.newSingleThreadExecutor().submit(() -> taskJob(sourceContext));
+
     }
 
     private void taskJob(SourceContext sourceContext) {
@@ -87,11 +107,32 @@ public class QiMoorSource extends PushSource<byte[]> {
         }
         for (; ; ) {
             try {
-                ByteBuffer buffer = sourceContext.getState(stateKey);
                 JsonObject jsonObject;
-                if (buffer != null) {
-                    String state = byteBuffer2String(buffer, StandardCharsets.UTF_8);
-                    String[] offSet = state.split("_");
+
+                // state storage by BK
+//                ByteBuffer buffer = sourceContext.getState(stateKey);
+//                if (buffer != null) {
+//                    String state = byteBuffer2String(buffer, StandardCharsets.UTF_8);
+//                    String[] offSet = state.split("_");
+//                    beginTime.set(offSet[0]);
+//                    endTime.set(offSet[1]);
+//                    pageNum.set(Integer.parseInt(offSet[2]));
+//                } else {
+//                    beginTime.set(offsetBeginTime);
+//                    endTime.set(TimeUtil.getNowWithNoSecond());
+//                    pageNum.set(1);
+//                }
+
+                // state storage by mysql
+                GetObjectService getObjectService = new GetStateServiceImpl();
+                WebChatState webChatState = (WebChatState) getObjectService.getObject(connection, GetStateSQL(databaseName,stateKey));
+                if (webChatState == null) {
+                    insertState(connection, databaseName ,stateKey, null);
+                    webChatState = (WebChatState) getObjectService.getObject(connection, GetStateSQL(databaseName,stateKey));
+                }
+                String stateValue = webChatState.getValue();
+                if (stateValue != null) {
+                    String[] offSet = stateValue.split("_");
                     beginTime.set(offSet[0]);
                     endTime.set(offSet[1]);
                     pageNum.set(Integer.parseInt(offSet[2]));
@@ -100,6 +141,7 @@ public class QiMoorSource extends PushSource<byte[]> {
                     endTime.set(TimeUtil.getNowWithNoSecond());
                     pageNum.set(1);
                 }
+
                 if (isOpenTimeDiff) {
                     if (timeDiff(beginTime.get(), endTime.get()) > Integer.parseInt(timeDiff)) {
                         log.info("【 beginTime 和 endTime 时间间隔太短！ continue 】");
@@ -118,7 +160,10 @@ public class QiMoorSource extends PushSource<byte[]> {
                     pageNum.set(1);
                     beginTime.set(endTime.get());
                     endTime.set(TimeUtil.getNowWithNoSecond());
-                    sourceContext.putState(stateKey, string2ByteBuffer(beginTime + "_" + endTime + "_" + pageNum, StandardCharsets.UTF_8));
+                    // state storage by BK
+//                    sourceContext.putState(stateKey, string2ByteBuffer(beginTime + "_" + endTime + "_" + pageNum, StandardCharsets.UTF_8));
+                    // state storage by mysql
+                    updateOperation(stateKey, beginTime + "_" + endTime + "_" + pageNum);
                 } else {
                     List<QiMoorWebChat> qiMoorWebChat = getQiMoorWebChat(jsonObject, idWorker, gson);
                     if (!(qiMoorWebChat == null || qiMoorWebChat.isEmpty())) {
@@ -130,14 +175,24 @@ public class QiMoorSource extends PushSource<byte[]> {
                                     } else {
                                         counter.set(0);
                                         pageNum.incrementAndGet();
-                                        sourceContext.putState(stateKey, string2ByteBuffer(beginTime.get() + "_" + endTime.get() + "_" + pageNum.get(), StandardCharsets.UTF_8));
+                                        // state storage by BK
+//                                        sourceContext.putState(stateKey, string2ByteBuffer(beginTime.get() + "_" + endTime.get() + "_" + pageNum.get(), StandardCharsets.UTF_8));
+
+                                        // state storage by mysql
+                                        updateOperation(stateKey, beginTime.get() + "_" + endTime.get() + "_" + pageNum.get());
                                     }
                                 },
                                 (v) -> {
                                     endTime.set(webChat.getCreateTime());
                                     pageNum.set(1);
                                     log.info(" receive fail response .. ");
-                                    sourceContext.putState(stateKey, paramsMap.get(stateKey));
+                                    // state storage by BK
+//                                    sourceContext.putState(stateKey, paramsMap.get(stateKey));
+
+                                    // state storage by mysql
+                                    String state = byteBuffer2String(paramsMap.get(stateKey), StandardCharsets.UTF_8);
+                                    updateOperation(stateKey, state);
+
                                 })));
                     }
                 }
@@ -205,5 +260,20 @@ public class QiMoorSource extends PushSource<byte[]> {
 
     @Override
     public void close() throws Exception {
+        if (connection != null) {
+            connection.close();
+        }
+    }
+
+    private void updateOperation(String stateKey, String stateValue) {
+        try {
+            int i = GetStateServiceImpl.updateState(connection, databaseName, stateKey, stateValue);
+            if (!(i > 0)) {
+                log.info(" [ update database fail , Please check the params !!!] ");
+            }
+        } catch (Exception e) {
+            log.error(" [ update state got error... ] ", e);
+        }
+
     }
 }

@@ -19,6 +19,30 @@ public class QiMoorSourceConfig implements Serializable {
             required = true,
             defaultValue = "",
             sensitive = true,
+            help = " database link url"
+    )
+    private String jdbcUrl;
+
+    @FieldDoc(
+            required = true,
+            defaultValue = "",
+            sensitive = true,
+            help = " database username  "
+    )
+    private String userName;
+
+    @FieldDoc(
+            required = true,
+            defaultValue = "",
+            sensitive = true,
+            help = " database password "
+    )
+    private String password;
+
+    @FieldDoc(
+            required = true,
+            defaultValue = "",
+            sensitive = true,
             help = " snowflakeID clusterID "
     )
     private Integer snowflakeClusterId;
@@ -78,6 +102,15 @@ public class QiMoorSourceConfig implements Serializable {
             help = " time interval switch  "
     )
     private Boolean isOpenTimeDiff;
+
+    @FieldDoc(
+            required = true,
+            defaultValue = "",
+            sensitive = true,
+            help = " database name  "
+    )
+    private String databaseName;
+
 
     public static QiMoorSourceConfig load(Map<String, Object> map) {
         Gson gson = new Gson();

@@ -38,7 +38,7 @@ public class WebChatMsgFunction implements Function<byte[], Void> {
     private WebChatMsgFunctionConfig webChatMsgFunctionConfig;
     private IdWorker idWorker;
 
-    Gson gson = GsonBuilderUtil.create(true);
+    final Gson gson = GsonBuilderUtil.create(true);
 
     @Override
     public Void process(byte[] input, Context context) throws InterruptedException {
