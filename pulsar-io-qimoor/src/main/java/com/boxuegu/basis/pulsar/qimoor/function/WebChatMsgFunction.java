@@ -142,11 +142,14 @@ public class WebChatMsgFunction implements Function<byte[], Void> {
                     beanCopier.copy(msg, webChatMsgSink, null);
                     webChatMsgSink.setId(idWorker.nextLong());
                     webChatMsgSink.setWeb_chat(gson.toJson(msg));
-                    webChatMsgSink.setDateTime(getISO8601TimeByStr(webChatMsgSink.getDateTime()));
+                    if (msg.getDateTime() != null) {
+                        webChatMsgSink.setDateTime(getISO8601TimeByStr(webChatMsgSink.getDateTime()));
+                    }
                     webChatMsgSinks.add(webChatMsgSink);
                 }
             }
         }
+        log.info(" webChatMsgSinks {}", new Gson().toJson(webChatMsgSinks));
         return webChatMsgSinks;
     }
 
