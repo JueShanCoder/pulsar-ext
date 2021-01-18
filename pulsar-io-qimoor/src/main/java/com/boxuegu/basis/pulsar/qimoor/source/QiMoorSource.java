@@ -283,8 +283,8 @@ public class QiMoorSource extends PushSource<byte[]> {
             }
         } catch (Exception e) {
             log.error(" [ update state got error... ] ", e);
-        }finally {
-            if (connection != null){
+        } finally {
+            if (connection != null) {
                 try {
                     connection.close();
                 } catch (SQLException e) {
