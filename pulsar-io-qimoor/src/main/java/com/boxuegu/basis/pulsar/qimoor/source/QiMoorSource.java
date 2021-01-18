@@ -274,13 +274,23 @@ public class QiMoorSource extends PushSource<byte[]> {
     }
 
     private void updateOperation(String stateKey, String stateValue) {
+        Connection connection = null;
         try {
-            int i = GetStateServiceImpl.updateState(dataSource.getConnection(), databaseName, stateKey, stateValue);
+            connection = dataSource.getConnection();
+            int i = GetStateServiceImpl.updateState(connection, databaseName, stateKey, stateValue);
             if (!(i > 0)) {
                 log.info(" [ update database fail , Please check the params !!!] ");
             }
         } catch (Exception e) {
             log.error(" [ update state got error... ] ", e);
+        } finally {
+            if (connection != null) {
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    log.error(" [QiMoorSource] close connection fail ...", e);
+                }
+            }
         }
 
     }
