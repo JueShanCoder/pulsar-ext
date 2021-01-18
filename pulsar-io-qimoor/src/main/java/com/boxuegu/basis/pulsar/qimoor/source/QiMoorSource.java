@@ -4,9 +4,7 @@ import com.boxuegu.basis.pulsar.qimoor.client.QiMoorClient;
 import com.boxuegu.basis.pulsar.qimoor.entity.QiMoorWebChat;
 import com.boxuegu.basis.pulsar.qimoor.entity.WebChatState;
 import com.boxuegu.basis.pulsar.qimoor.service.GetObjectService;
-import com.boxuegu.basis.pulsar.qimoor.service.JdbcService;
 import com.boxuegu.basis.pulsar.qimoor.service.impl.GetStateServiceImpl;
-import com.boxuegu.basis.pulsar.qimoor.service.impl.JdbcServiceImpl;
 import com.boxuegu.basis.pulsar.qimoor.snowflake.IdWorker;
 import com.boxuegu.basis.pulsar.qimoor.source.config.QiMoorSourceConfig;
 import com.boxuegu.basis.pulsar.qimoor.source.record.QiMoorSourceRecord;
@@ -61,6 +59,7 @@ public class QiMoorSource extends PushSource<byte[]> {
     private Integer clusterId;
     private Integer workerId;
     private String databaseName;
+    private Connection connection;
     private HikariDataSource dataSource;
 
     final Gson gson = GsonBuilderUtil.create(false);
@@ -106,6 +105,13 @@ public class QiMoorSource extends PushSource<byte[]> {
             throw new IllegalArgumentException(" Initialization snowFlake fail ... ");
         }
         for (; ; ) {
+
+            try (Connection hiConnection = dataSource.getConnection()){
+                connection = hiConnection;
+            }catch (Exception e){
+                throw new IllegalArgumentException(" Get Connection Fail ... Please check HikariDataSource Initialization ");
+            }
+
             try {
                 JsonObject jsonObject;
 
@@ -125,10 +131,10 @@ public class QiMoorSource extends PushSource<byte[]> {
 
                 // state storage by mysql
                 GetObjectService getObjectService = new GetStateServiceImpl();
-                WebChatState webChatState = (WebChatState) getObjectService.getObject(dataSource.getConnection(), GetStateSQL(databaseName,stateKey));
+                WebChatState webChatState = (WebChatState) getObjectService.getObject(connection, GetStateSQL(databaseName,stateKey));
                 if (webChatState == null) {
-                    insertState(dataSource.getConnection(), databaseName ,stateKey, null);
-                    webChatState = (WebChatState) getObjectService.getObject(dataSource.getConnection(), GetStateSQL(databaseName,stateKey));
+                    insertState(connection, databaseName ,stateKey, null);
+                    webChatState = (WebChatState) getObjectService.getObject(connection, GetStateSQL(databaseName,stateKey));
                 }
                 String stateValue = webChatState.getValue();
                 if (stateValue != null) {
@@ -197,7 +203,7 @@ public class QiMoorSource extends PushSource<byte[]> {
                     }
                 }
             } catch (Exception e) {
-                log.error("[QiMoorSource] got Exception ...", e);
+                throw new IllegalArgumentException(" [QiMoorSource] got Exception ...",e);
             }
         }
     }
@@ -259,7 +265,7 @@ public class QiMoorSource extends PushSource<byte[]> {
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         if (dataSource != null) {
             dataSource.close();
         }
@@ -267,7 +273,7 @@ public class QiMoorSource extends PushSource<byte[]> {
 
     private void updateOperation(String stateKey, String stateValue) {
         try {
-            int i = GetStateServiceImpl.updateState(dataSource.getConnection(), databaseName, stateKey, stateValue);
+            int i = GetStateServiceImpl.updateState(connection, databaseName, stateKey, stateValue);
             if (!(i > 0)) {
                 log.info(" [ update database fail , Please check the params !!!] ");
             }
