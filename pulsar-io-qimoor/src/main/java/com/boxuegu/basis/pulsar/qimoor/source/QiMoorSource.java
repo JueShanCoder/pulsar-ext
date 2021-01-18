@@ -27,6 +27,7 @@ import org.apache.pulsar.io.core.annotations.IOType;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -104,6 +105,7 @@ public class QiMoorSource extends PushSource<byte[]> {
             throw new IllegalArgumentException(" Initialization snowFlake fail ... ");
         }
         for (; ; ) {
+            Connection hiConnection = null;
             try {
                 JsonObject jsonObject;
 
@@ -120,7 +122,7 @@ public class QiMoorSource extends PushSource<byte[]> {
 //                    endTime.set(TimeUtil.getNowWithNoSecond());
 //                    pageNum.set(1);
 //                }
-                Connection hiConnection = dataSource.getConnection();
+                hiConnection = dataSource.getConnection();
                 // state storage by mysql
                 GetObjectService getObjectService = new GetStateServiceImpl();
                 WebChatState webChatState = (WebChatState) getObjectService.getObject(hiConnection, GetStateSQL(databaseName,stateKey));
@@ -165,6 +167,8 @@ public class QiMoorSource extends PushSource<byte[]> {
                 } else {
                     List<QiMoorWebChat> qiMoorWebChat = getQiMoorWebChat(jsonObject, idWorker, gson);
                     if (!(qiMoorWebChat == null || qiMoorWebChat.isEmpty())) {
+                        Connection finalHiConnection = hiConnection;
+                        Connection finalHiConnection1 = hiConnection;
                         qiMoorWebChat.forEach(webChat -> consume(new QiMoorSourceRecord(webChat,
                                 (v) -> {
                                     if (counter.get() < qiMoorWebChat.size()) {
@@ -177,7 +181,7 @@ public class QiMoorSource extends PushSource<byte[]> {
 //                                        sourceContext.putState(stateKey, string2ByteBuffer(beginTime.get() + "_" + endTime.get() + "_" + pageNum.get(), StandardCharsets.UTF_8));
 
                                         // state storage by mysql
-                                        updateOperation(hiConnection,stateKey, beginTime.get() + "_" + endTime.get() + "_" + pageNum.get());
+                                        updateOperation(finalHiConnection,stateKey, beginTime.get() + "_" + endTime.get() + "_" + pageNum.get());
                                     }
                                 },
                                 (v) -> {
@@ -189,13 +193,21 @@ public class QiMoorSource extends PushSource<byte[]> {
 
                                     // state storage by mysql
                                     String state = byteBuffer2String(paramsMap.get(stateKey), StandardCharsets.UTF_8);
-                                    updateOperation(hiConnection,stateKey, state);
+                                    updateOperation(finalHiConnection1,stateKey, state);
 
                                 })));
                     }
                 }
             } catch (Exception e) {
                 throw new IllegalArgumentException(" [QiMoorSource] got Exception ...",e);
+            } finally {
+                if (hiConnection != null){
+                    try {
+                        hiConnection.close();
+                    } catch (SQLException e){
+                        log.error(" [QiMoorSource] close connection fail ...",e);
+                    }
+                }
             }
         }
     }
