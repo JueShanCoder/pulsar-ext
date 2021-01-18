@@ -39,7 +39,8 @@ public class UnCloseSessionFunction implements Function<byte[], Void> {
         UnCloseSessionFunctionConfig unCloseSessionFunctionConfig = UnCloseSessionFunctionConfig.load(context.getUserConfigMap());
         if (unCloseSessionFunctionConfig.getApiAdapterUrl() == null || unCloseSessionFunctionConfig.getCollectQimoor() == null ||
                 unCloseSessionFunctionConfig.getJdbcUrl() == null || unCloseSessionFunctionConfig.getMaxRetryTimes() == null ||
-                unCloseSessionFunctionConfig.getPassword() == null || unCloseSessionFunctionConfig.getCourseTypes() == null) {
+                unCloseSessionFunctionConfig.getPassword() == null || unCloseSessionFunctionConfig.getCourseTypes() == null ||
+                unCloseSessionFunctionConfig.getSnowflakeClusterId() == null || unCloseSessionFunctionConfig.getSnowflakeWorkerId() == null) {
             throw new IllegalArgumentException(" Required parameters are not set... Please check the startup script !!! ");
         }
 
@@ -70,8 +71,8 @@ public class UnCloseSessionFunction implements Function<byte[], Void> {
         }
         IdWorker idWorker;
         try {
-            idWorker = new IdWorker((Long.parseLong((String) context.getUserConfigMap().get("snowflake-cluster-id"))),
-                    (Long.parseLong((String) context.getUserConfigMap().get("snowflake-worker-id"))));
+            idWorker = new IdWorker(Long.parseLong(unCloseSessionFunctionConfig.getSnowflakeClusterId()),
+                    Long.parseLong(unCloseSessionFunctionConfig.getSnowflakeWorkerId()));
         } catch (IllegalAccessException e) {
             log.error("[unCloseSessionFunction] got IllegalAccessException");
             return null;
