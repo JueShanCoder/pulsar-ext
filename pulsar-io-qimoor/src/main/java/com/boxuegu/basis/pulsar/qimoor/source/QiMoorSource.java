@@ -85,6 +85,7 @@ public class QiMoorSource extends PushSource<byte[]> {
                 jdbcUrl == null || userName == null || password == null || databaseName == null) {
             throw new IllegalArgumentException(" Required parameters are not set... Please check the startup script !!! ");
         }
+        dataSource = new HikariDataSource();
         dataSource.setJdbcUrl(jdbcUrl);
         dataSource.setUsername(userName);
         dataSource.setPassword(password);
