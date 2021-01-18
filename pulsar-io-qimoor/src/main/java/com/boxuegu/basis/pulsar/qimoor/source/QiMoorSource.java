@@ -17,6 +17,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
+import com.zaxxer.hikari.HikariDataSource;
 import feign.Feign;
 import feign.gson.GsonDecoder;
 import lombok.extern.slf4j.Slf4j;
@@ -59,8 +60,9 @@ public class QiMoorSource extends PushSource<byte[]> {
     private Boolean isOpenTimeDiff;
     private Integer clusterId;
     private Integer workerId;
-    private Connection connection;
     private String databaseName;
+    private HikariDataSource dataSource;
+
     final Gson gson = GsonBuilderUtil.create(false);
 
     @Override
@@ -78,17 +80,14 @@ public class QiMoorSource extends PushSource<byte[]> {
         stateKey = qiMoorSourceConfig.getOffsetStateKey();
         clusterId = qiMoorSourceConfig.getSnowflakeClusterId();
         workerId = qiMoorSourceConfig.getSnowflakeWorkerId();
-        JdbcService jdbcService = new JdbcServiceImpl();
         if (apiAdapterUrl == null || collectQimoor == null || offsetBeginTime == null || timeDiff == null ||
                 isOpenTimeDiff == null || stateKey == null || clusterId == null || workerId == null ||
                 jdbcUrl == null || userName == null || password == null || databaseName == null) {
             throw new IllegalArgumentException(" Required parameters are not set... Please check the startup script !!! ");
         }
-        try {
-            connection = jdbcService.getConnection(jdbcUrl, userName, password);
-        } catch (Exception e) {
-            throw new IllegalArgumentException(" connection database fail ... Please check the database link !!!");
-        }
+        dataSource.setJdbcUrl(jdbcUrl);
+        dataSource.setUsername(userName);
+        dataSource.setPassword(password);
         Executors.newSingleThreadExecutor().submit(() -> taskJob(sourceContext));
 
     }
@@ -125,10 +124,10 @@ public class QiMoorSource extends PushSource<byte[]> {
 
                 // state storage by mysql
                 GetObjectService getObjectService = new GetStateServiceImpl();
-                WebChatState webChatState = (WebChatState) getObjectService.getObject(connection, GetStateSQL(databaseName,stateKey));
+                WebChatState webChatState = (WebChatState) getObjectService.getObject(dataSource.getConnection(), GetStateSQL(databaseName,stateKey));
                 if (webChatState == null) {
-                    insertState(connection, databaseName ,stateKey, null);
-                    webChatState = (WebChatState) getObjectService.getObject(connection, GetStateSQL(databaseName,stateKey));
+                    insertState(dataSource.getConnection(), databaseName ,stateKey, null);
+                    webChatState = (WebChatState) getObjectService.getObject(dataSource.getConnection(), GetStateSQL(databaseName,stateKey));
                 }
                 String stateValue = webChatState.getValue();
                 if (stateValue != null) {
@@ -260,14 +259,14 @@ public class QiMoorSource extends PushSource<byte[]> {
 
     @Override
     public void close() throws Exception {
-        if (connection != null) {
-            connection.close();
+        if (dataSource != null) {
+            dataSource.close();
         }
     }
 
     private void updateOperation(String stateKey, String stateValue) {
         try {
-            int i = GetStateServiceImpl.updateState(connection, databaseName, stateKey, stateValue);
+            int i = GetStateServiceImpl.updateState(dataSource.getConnection(), databaseName, stateKey, stateValue);
             if (!(i > 0)) {
                 log.info(" [ update database fail , Please check the params !!!] ");
             }
