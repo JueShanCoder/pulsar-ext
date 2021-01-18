@@ -163,12 +163,10 @@ public class QiMoorSource extends PushSource<byte[]> {
                     // state storage by BK
 //                    sourceContext.putState(stateKey, string2ByteBuffer(beginTime + "_" + endTime + "_" + pageNum, StandardCharsets.UTF_8));
                     // state storage by mysql
-                    updateOperation(hiConnection, stateKey, beginTime + "_" + endTime + "_" + pageNum);
+                    updateOperation(stateKey, beginTime + "_" + endTime + "_" + pageNum);
                 } else {
                     List<QiMoorWebChat> qiMoorWebChat = getQiMoorWebChat(jsonObject, idWorker, gson);
                     if (!(qiMoorWebChat == null || qiMoorWebChat.isEmpty())) {
-                        Connection finalHiConnection = hiConnection;
-                        Connection finalHiConnection1 = hiConnection;
                         qiMoorWebChat.forEach(webChat -> consume(new QiMoorSourceRecord(webChat,
                                 (v) -> {
                                     if (counter.get() < qiMoorWebChat.size()) {
@@ -181,7 +179,7 @@ public class QiMoorSource extends PushSource<byte[]> {
 //                                        sourceContext.putState(stateKey, string2ByteBuffer(beginTime.get() + "_" + endTime.get() + "_" + pageNum.get(), StandardCharsets.UTF_8));
 
                                         // state storage by mysql
-                                        updateOperation(finalHiConnection, stateKey, beginTime.get() + "_" + endTime.get() + "_" + pageNum.get());
+                                        updateOperation(stateKey, beginTime.get() + "_" + endTime.get() + "_" + pageNum.get());
                                     }
                                 },
                                 (v) -> {
@@ -193,7 +191,7 @@ public class QiMoorSource extends PushSource<byte[]> {
 
                                     // state storage by mysql
                                     String state = byteBuffer2String(paramsMap.get(stateKey), StandardCharsets.UTF_8);
-                                    updateOperation(finalHiConnection1, stateKey, state);
+                                    updateOperation(stateKey, state);
 
                                 })));
                     }
@@ -275,9 +273,9 @@ public class QiMoorSource extends PushSource<byte[]> {
         }
     }
 
-    private void updateOperation(Connection connection, String stateKey, String stateValue) {
+    private void updateOperation(String stateKey, String stateValue) {
         try {
-            int i = GetStateServiceImpl.updateState(connection, databaseName, stateKey, stateValue);
+            int i = GetStateServiceImpl.updateState(dataSource.getConnection(), databaseName, stateKey, stateValue);
             if (!(i > 0)) {
                 log.info(" [ update database fail , Please check the params !!!] ");
             }
