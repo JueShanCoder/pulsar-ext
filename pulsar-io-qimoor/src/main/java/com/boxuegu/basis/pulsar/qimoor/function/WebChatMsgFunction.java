@@ -38,7 +38,8 @@ public class WebChatMsgFunction implements Function<byte[], Void> {
     private WebChatMsgFunctionConfig webChatMsgFunctionConfig;
     private IdWorker idWorker;
 
-    final Gson gson = GsonBuilderUtil.create(true);
+    final Gson gsonMsgTrue = GsonBuilderUtil.create(true);
+    final Gson gsonMsgFalse = GsonBuilderUtil.create(false);
 
     @Override
     public Void process(byte[] input, Context context) throws InterruptedException {
@@ -57,7 +58,7 @@ public class WebChatMsgFunction implements Function<byte[], Void> {
             throw new IllegalArgumentException(" Snowflake initialization fail ... ");
         }
 
-        WebChatSink webChatSink = gson.fromJson(new String(input), WebChatSink.class);
+        WebChatSink webChatSink = gsonMsgTrue.fromJson(new String(input), WebChatSink.class);
         Map<String, String> properties = new HashMap<>();
         properties.put("ACTION", "INSERT");
         properties.put("TARGET", webChatMsgFunctionConfig.getTableName());
@@ -67,7 +68,7 @@ public class WebChatMsgFunction implements Function<byte[], Void> {
             if (!(webChatMessages == null || webChatMessages.isEmpty())) {
                 webChatMessages.forEach(webChat -> {
                     try {
-                        context.newOutputMessage(webChatMsgFunctionConfig.getWebChatMsgTopicName(), Schema.BYTES).value(gson.toJson(webChat).getBytes(StandardCharsets.UTF_8)).properties(properties).send();
+                        context.newOutputMessage(webChatMsgFunctionConfig.getWebChatMsgTopicName(), Schema.BYTES).value(gsonMsgTrue.toJson(webChat).getBytes(StandardCharsets.UTF_8)).properties(properties).send();
                         log.info("[WebChatMsgFunction] 聊天记录消息成功发送到 {} 队列 ，[7moor] sid {}  ...", webChatMsgFunctionConfig.getWebChatMsgTopicName(), webChat.getSid());
                     } catch (PulsarClientException e) {
                         log.error("[WebChatMsgFunction] Got PulsarClientException, fail响应，消息即将进入死信队列 ... ", e);
@@ -134,14 +135,14 @@ public class WebChatMsgFunction implements Function<byte[], Void> {
                 JsonArray array = jsonObject.getAsJsonObject("data").getAsJsonArray("webchatMessage");
                 Type listType = new com.google.gson.reflect.TypeToken<List<WebchatMessage>>() {
                 }.getType();
-                webchatMessages = gson.fromJson(array, listType);
+                webchatMessages = gsonMsgFalse.fromJson(array, listType);
                 for (WebchatMessage msg : webchatMessages) {
                     WebChatMsgSink webChatMsgSink = new WebChatMsgSink();
                     msg.setMessage(filterEmoji(msg.getMessage(), ""));
                     BeanCopier beanCopier = BeanCopier.create(WebchatMessage.class, WebChatMsgSink.class, false);
                     beanCopier.copy(msg, webChatMsgSink, null);
                     webChatMsgSink.setId(idWorker.nextLong());
-                    webChatMsgSink.setWeb_chat(gson.toJson(msg));
+                    webChatMsgSink.setWebChat(gsonMsgFalse.toJson(msg));
                     if (msg.getDateTime() != null) {
                         webChatMsgSink.setDateTime(getISO8601TimeByStr(webChatMsgSink.getDateTime()));
                     }
@@ -149,7 +150,6 @@ public class WebChatMsgFunction implements Function<byte[], Void> {
                 }
             }
         }
-        log.info(" webChatMsgSinks {}", new Gson().toJson(webChatMsgSinks));
         return webChatMsgSinks;
     }
 
