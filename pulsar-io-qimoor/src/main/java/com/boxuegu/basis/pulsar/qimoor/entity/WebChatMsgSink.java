@@ -32,6 +32,6 @@ public class WebChatMsgSink {
     /**
      * 所有字段集合
      */
-    private String web_chat;
+    private String webChat;
 
 }
