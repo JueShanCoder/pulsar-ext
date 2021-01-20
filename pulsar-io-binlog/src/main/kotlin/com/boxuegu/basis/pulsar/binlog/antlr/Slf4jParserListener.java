@@ -1476,6 +1476,16 @@ public class Slf4jParserListener extends MySqlParserBaseListener {
     }
 
     @Override
+    public void enterAlterByDropConstraintCheck(MySqlParser.AlterByDropConstraintCheckContext ctx) {
+        super.enterAlterByDropConstraintCheck(ctx);
+    }
+
+    @Override
+    public void exitAlterByDropConstraintCheck(MySqlParser.AlterByDropConstraintCheckContext ctx) {
+        super.exitAlterByDropConstraintCheck(ctx);
+    }
+
+    @Override
     public void enterAlterByDropPrimaryKey(MySqlParser.AlterByDropPrimaryKeyContext ctx) {
         LOGGER.debug("enterAlterByDropPrimaryKey <- {}", ctx.toStringTree(parser));
     }

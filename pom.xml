@@ -20,11 +20,11 @@
     <properties>
         <pulsar.version>2.6.1</pulsar.version>
         <slf4j.version>1.7.30</slf4j.version>
-        <log4j.version>2.13.3</log4j.version>
-        <antlr.version>4.8</antlr.version>
+        <log4j.version>2.14.0</log4j.version>
+        <antlr.version>4.9.1</antlr.version>
         <kotlin.version>1.4.10</kotlin.version>
         <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
-        <kotlinx.version>1.4.1</kotlinx.version>
+        <kotlinx.version>1.4.2</kotlinx.version>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -89,14 +89,14 @@
                 <version>${log4j.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.zaxxer</groupId>
-                <artifactId>HikariCP</artifactId>
-                <version>3.4.5</version>
-            </dependency>
-            <dependency>
                 <groupId>org.antlr</groupId>
                 <artifactId>antlr4-runtime</artifactId>
                 <version>${antlr.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.zaxxer</groupId>
+                <artifactId>HikariCP</artifactId>
+                <version>3.4.5</version>
             </dependency>
             <dependency>
                 <groupId>com.zendesk</groupId>
@@ -111,12 +111,12 @@
             <dependency>
                 <groupId>mysql</groupId>
                 <artifactId>mysql-connector-java</artifactId>
-                <version>8.0.22</version>
+                <version>8.0.23</version>
             </dependency>
             <dependency>
                 <groupId>org.mariadb.jdbc</groupId>
                 <artifactId>mariadb-java-client</artifactId>
-                <version>2.7.0</version>
+                <version>2.7.1</version>
             </dependency>
             <dependency>
                 <groupId>org.postgresql</groupId>
