@@ -30,7 +30,7 @@ public class GetStateServiceImpl implements GetObjectService {
         } finally {
             closeSession(null, row, preparedStatement);
         }
-        log.info(" webChatState entity is {}", new Gson().toJson(webChatState));
+//        log.info(" webChatState entity is {}", new Gson().toJson(webChatState));
         return webChatState;
     }
 

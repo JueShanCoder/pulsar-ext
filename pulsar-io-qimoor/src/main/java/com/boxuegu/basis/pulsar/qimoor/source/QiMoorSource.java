@@ -154,7 +154,7 @@ public class QiMoorSource extends PushSource<byte[]> {
                     throw new IllegalArgumentException(" Argument jsonObject should not be null ");
                 }
                 int count = jsonObject.getAsJsonObject("data").get("count").getAsInt();
-                log.info("[  beginTime {} ，endTime {} ， pageNumber {} ，count {} ] ", beginTime, endTime.get(), pageNum, count);
+//                log.info("[  beginTime {} ，endTime {} ， pageNumber {} ，count {} ] ", beginTime, endTime.get(), pageNum, count);
                 // 当前时间区间 无数据
                 if (count == 0) {
                     pageNum.set(1);
@@ -169,9 +169,11 @@ public class QiMoorSource extends PushSource<byte[]> {
                     if (!(qiMoorWebChat == null || qiMoorWebChat.isEmpty())) {
                         qiMoorWebChat.forEach(webChat -> consume(new QiMoorSourceRecord(webChat,
                                 (v) -> {
-                                    log.info("webchat sessionId is {}",webChat.get_id());
-                                    if (counter.get() < qiMoorWebChat.size()) {
+                                    if (webChat.get_id().equalsIgnoreCase("e0425c80-5b0d-11eb-bb4f-b3505c23a287")){
                                         log.info("[ TODO debugging ] count < size and counter num is {} ,list size is {}, pageNum is {} :", counter.get(),qiMoorWebChat.size(),pageNum);
+                                        log.info("[ TODO debugging ] beginTime {}, endTime {} , :", beginTime, endTime);
+                                    }
+                                    if (counter.get() < qiMoorWebChat.size()) {
                                         counter.incrementAndGet();
                                         paramsMap.put(stateKey, string2ByteBuffer(beginTime.get() + "_" + endTime.get() + "_" + pageNum.get(), StandardCharsets.UTF_8));
                                     } else {
@@ -181,7 +183,6 @@ public class QiMoorSource extends PushSource<byte[]> {
 //                                        sourceContext.putState(stateKey, string2ByteBuffer(beginTime.get() + "_" + endTime.get() + "_" + pageNum.get(), StandardCharsets.UTF_8));
 
                                         // state storage by mysql
-                                        log.info("[ TODO debugging ] count > or =  size and counter num is {} ,list size is {}, pageNum is {} :", counter.get(),qiMoorWebChat.size(),pageNum);
                                         updateOperation(stateKey, beginTime.get() + "_" + endTime.get() + "_" + pageNum.get());
                                     }
                                 },
