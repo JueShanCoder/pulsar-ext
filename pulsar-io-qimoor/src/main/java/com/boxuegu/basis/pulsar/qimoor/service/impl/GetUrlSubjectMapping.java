@@ -33,12 +33,12 @@ public class GetUrlSubjectMapping implements GetObjectService {
         return getUrlSubjectMapping;
     }
 
-    public static String getUrlSubjectMapper(String url) {
+    public static String getUrlSubjectMapper(String url,String databaseName) {
         return "SELECT\n" +
                 "\t`subject_id`,\n" +
                 "\t`subject_name`\n" +
                 "FROM\n" +
-                "\t`d_bxg_crm`.`t_url_subject_mapping`\n" +
+                "\t`"+ databaseName +"`.`t_url_subject_mapping`\n" +
                 "WHERE\n" +
                 "\t`url` = '" + url + "'";
     }

@@ -71,6 +71,22 @@ public class QiMoorSourceFunctionConfig implements Serializable {
     )
     private String tableName;
 
+    @FieldDoc(
+            required = true,
+            defaultValue = "",
+            sensitive = true,
+            help = " CRM database name  "
+    )
+    private String crmDatabaseName;
+
+    @FieldDoc(
+            required = true,
+            defaultValue = "",
+            sensitive = true,
+            help = " BXG database name  "
+    )
+    private String bxgDatabaseName;
+
 
     public static QiMoorSourceFunctionConfig load(Map<String, Object> map) {
         Gson gson = new Gson();

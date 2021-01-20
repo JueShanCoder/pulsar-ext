@@ -40,7 +40,8 @@ public class UnCloseSessionFunction implements Function<byte[], Void> {
         if (unCloseSessionFunctionConfig.getApiAdapterUrl() == null || unCloseSessionFunctionConfig.getCollectQimoor() == null ||
                 unCloseSessionFunctionConfig.getJdbcUrl() == null || unCloseSessionFunctionConfig.getMaxRetryTimes() == null ||
                 unCloseSessionFunctionConfig.getPassword() == null || unCloseSessionFunctionConfig.getCourseTypes() == null ||
-                unCloseSessionFunctionConfig.getSnowflakeClusterId() == null || unCloseSessionFunctionConfig.getSnowflakeWorkerId() == null) {
+                unCloseSessionFunctionConfig.getSnowflakeClusterId() == null || unCloseSessionFunctionConfig.getSnowflakeWorkerId() == null ||
+                unCloseSessionFunctionConfig.getCrmDatabaseName() == null || unCloseSessionFunctionConfig.getBxgDatabaseName() == null) {
             throw new IllegalArgumentException(" Required parameters are not set... Please check the startup script !!! ");
         }
 
@@ -94,7 +95,8 @@ public class UnCloseSessionFunction implements Function<byte[], Void> {
                 } else if (qiMoorWebChat.getStatus().equalsIgnoreCase("finish") || qiMoorWebChat.getStatus().equalsIgnoreCase("invalid")) {
                     context.getUserConfigValue("close-session-topic-name").ifPresent(topicName -> {
                         try {
-                            WebChatSink webChatSink = parseSession(qiMoorWebChat, gson, unCloseSessionFunctionConfig.getCourseTypes(), unCloseSessionFunctionConfig.getJdbcUrl(), unCloseSessionFunctionConfig.getUserName(), unCloseSessionFunctionConfig.getPassword());
+                            WebChatSink webChatSink = parseSession(qiMoorWebChat, gson, unCloseSessionFunctionConfig.getCourseTypes(), unCloseSessionFunctionConfig.getJdbcUrl(),
+                                    unCloseSessionFunctionConfig.getUserName(), unCloseSessionFunctionConfig.getPassword(), unCloseSessionFunctionConfig.getCrmDatabaseName(), unCloseSessionFunctionConfig.getBxgDatabaseName());
                             context.newOutputMessage((String) topicName, Schema.BYTES).value(gson.toJson(webChatSink).getBytes(StandardCharsets.UTF_8)).properties(properties).send();
                             context.getCurrentRecord().ack();
                             log.info("[UnCloseSessionFunction] 会话为已完成状态，[7moor] sessionId {},Id {}, 消息成功发送到 {} 队列...", webChat.get_id(), webChat.getId(), topicName);
