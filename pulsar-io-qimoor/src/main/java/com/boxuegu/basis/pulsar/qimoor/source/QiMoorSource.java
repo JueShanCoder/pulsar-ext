@@ -169,7 +169,9 @@ public class QiMoorSource extends PushSource<byte[]> {
                     if (!(qiMoorWebChat == null || qiMoorWebChat.isEmpty())) {
                         qiMoorWebChat.forEach(webChat -> consume(new QiMoorSourceRecord(webChat,
                                 (v) -> {
+                                    log.info("webchat sessionId is {}",webChat.get_id());
                                     if (counter.get() < qiMoorWebChat.size()) {
+                                        log.info("[ TODO debugging ] count < size and counter num is {} ,list size is {}, pageNum is {} :", counter.get(),qiMoorWebChat.size(),pageNum);
                                         counter.incrementAndGet();
                                         paramsMap.put(stateKey, string2ByteBuffer(beginTime.get() + "_" + endTime.get() + "_" + pageNum.get(), StandardCharsets.UTF_8));
                                     } else {
@@ -179,6 +181,7 @@ public class QiMoorSource extends PushSource<byte[]> {
 //                                        sourceContext.putState(stateKey, string2ByteBuffer(beginTime.get() + "_" + endTime.get() + "_" + pageNum.get(), StandardCharsets.UTF_8));
 
                                         // state storage by mysql
+                                        log.info("[ TODO debugging ] count > or =  size and counter num is {} ,list size is {}, pageNum is {} :", counter.get(),qiMoorWebChat.size(),pageNum);
                                         updateOperation(stateKey, beginTime.get() + "_" + endTime.get() + "_" + pageNum.get());
                                     }
                                 },
