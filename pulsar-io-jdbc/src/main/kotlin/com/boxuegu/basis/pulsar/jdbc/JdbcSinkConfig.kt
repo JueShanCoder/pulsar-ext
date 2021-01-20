@@ -31,6 +31,12 @@ data class JdbcSinkConfig(
         help = "JDBC URL of the database"
     )
     val jdbcUrl: String = "",
+
+    @FieldDoc(
+        defaultValue = "GMT+8",
+        help = "Default timezone of the JVM instance"
+    )
+    val timezone: String = "GMT+8",
 )
 
 fun JdbcSinkConfig.validate() {

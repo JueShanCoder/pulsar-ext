@@ -9,6 +9,7 @@ import org.apache.pulsar.io.core.SinkContext
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.sql.SQLException
+import java.util.*
 
 @Suppress("unused")
 class JdbcSink : Sink<ByteArray> {
@@ -29,6 +30,8 @@ class JdbcSink : Sink<ByteArray> {
             it.password = sinkConfig.password
             it.isAutoCommit = false
         }
+        System.setProperty("user.timezone", sinkConfig.timezone)
+        TimeZone.setDefault(TimeZone.getTimeZone(sinkConfig.timezone))
         LOGGER.info("Instance {} connected to {}", context.instanceId, sinkConfig.jdbcUrl)
     }
 

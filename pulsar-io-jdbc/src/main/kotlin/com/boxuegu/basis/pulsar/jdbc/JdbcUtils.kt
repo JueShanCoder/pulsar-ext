@@ -217,8 +217,7 @@ fun Connection.buildSQL(target: String, action: JdbcAction, entity: JsonElement,
 
 fun PreparedStatement.setDate(index: Int, date: LocalDate) = setDate(index, java.sql.Date.valueOf(date))
 fun PreparedStatement.setTime(index: Int, time: LocalTime) = setTime(index, Time.valueOf(time))
-fun PreparedStatement.setTimestamp(index: Int, datetime: LocalDateTime) =
-    setTimestamp(index, Timestamp.valueOf(datetime))
+fun PreparedStatement.setTimestamp(index: Int, datetime: LocalDateTime) = setTimestamp(index, Timestamp.valueOf(datetime))
 
 fun PreparedStatement.setParam(index: Int, field: JdbcField) {
     if (field.value == null) setNull(index, field.type) else when (field.type) {
