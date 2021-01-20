@@ -37,9 +37,9 @@ public class TimeUtil {
     }
 
     public static String getNowWithNoSecond() {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:00");
-        Date date = new Date(new Date().getTime() - 60 * 1000);
-        return sdf.format(date);
+        SimpleDateFormat dateFormatGmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:00");
+        dateFormatGmt.setTimeZone(TimeZone.getTimeZone("GMT+8"));
+        return dateFormatGmt.format(new Date());
     }
 
     public static String getTimeStrByLong(Long times) {
