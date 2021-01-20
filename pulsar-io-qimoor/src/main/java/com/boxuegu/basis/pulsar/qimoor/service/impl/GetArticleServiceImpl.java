@@ -33,11 +33,11 @@ public class GetArticleServiceImpl implements GetObjectService {
         return remoteArticle;
     }
 
-    public static String getArticleSQL(Integer id) {
+    public static String getArticleSQL(Integer id, String bxgDatabaseName) {
         return "SELECT\n" +
                 "\t`menu_id`\n" +
                 "FROM\n" +
-                "\t`d_bxg`.`oe_article` \n" +
+                "\t`"+ bxgDatabaseName +"`.`oe_article` \n" +
                 "WHERE\n" +
                 "\t`id` = '" + id + "'";
     }

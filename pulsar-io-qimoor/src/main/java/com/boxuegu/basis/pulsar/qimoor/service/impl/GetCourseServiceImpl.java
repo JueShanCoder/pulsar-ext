@@ -34,7 +34,7 @@ public class GetCourseServiceImpl implements GetObjectService {
         return remoteCourse;
     }
 
-    public static String getRemoteCourseSQL(Integer id) {
+    public static String getRemoteCourseSQL(Integer id, String bxgDatabaseName) {
         return "SELECT\n" +
                 "\t`grade_name`,\n" +
                 "\t`menu_id`,\n" +
@@ -42,7 +42,7 @@ public class GetCourseServiceImpl implements GetObjectService {
                 "\t`course_type`,\n" +
                 "\t`status` \n" +
                 "FROM\n" +
-                "\t`d_bxg`.`oe_course` \n" +
+                "\t`"+ bxgDatabaseName +"`.`oe_course` \n" +
                 "WHERE\n" +
                 "\t`id` = '" + id + "'";
     }
