@@ -28,6 +28,7 @@ class JdbcSink : Sink<ByteArray> {
             it.username = sinkConfig.username
             it.password = sinkConfig.password
             it.isAutoCommit = false
+            it.addDataSourceProperty("serverTimezone", "GMT+8")
         }
         LOGGER.info("Instance {} connected to {}", context.instanceId, sinkConfig.jdbcUrl)
     }
