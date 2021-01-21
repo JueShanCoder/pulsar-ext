@@ -94,9 +94,9 @@ public class QiMoorSource extends PushSource<byte[]> {
 
     private void taskJob(SourceContext sourceContext) {
         IdWorker idWorker;
-        final AtomicInteger counter = new AtomicInteger(0);
         AtomicReference<String> beginTime = new AtomicReference<>("");
         AtomicReference<String> endTime = new AtomicReference<>("");
+        AtomicInteger counter = new AtomicInteger(1);
         AtomicInteger pageNum = new AtomicInteger(0);
         Map<String, ByteBuffer> paramsMap = new HashMap<>();
         try {
@@ -149,12 +149,11 @@ public class QiMoorSource extends PushSource<byte[]> {
                     }
                 }
 
-                jsonObject = dealWithSession(beginTime.get(), endTime.get(), pageNum);
+                jsonObject = dealWithSession(beginTime.get(), endTime.get(), pageNum.get());
                 if (jsonObject == null) {
                     throw new IllegalArgumentException(" Argument jsonObject should not be null ");
                 }
                 int count = jsonObject.getAsJsonObject("data").get("count").getAsInt();
-//                log.info("[  beginTime {} ，endTime {} ， pageNumber {} ，count {} ] ", beginTime, endTime.get(), pageNum, count);
                 // 当前时间区间 无数据
                 if (count == 0) {
                     pageNum.set(1);
@@ -166,14 +165,10 @@ public class QiMoorSource extends PushSource<byte[]> {
                     updateOperation(stateKey, beginTime + "_" + endTime + "_" + pageNum);
                 } else {
                     List<QiMoorWebChat> qiMoorWebChat = getQiMoorWebChat(jsonObject, idWorker, gson);
-                    log.info(new Gson().toJson(qiMoorWebChat));
                     if (!(qiMoorWebChat == null || qiMoorWebChat.isEmpty())) {
+
                         qiMoorWebChat.forEach(webChat -> consume(new QiMoorSourceRecord(webChat,
                                 (v) -> {
-                                    if (webChat.get_id().equalsIgnoreCase("e0425c80-5b0d-11eb-bb4f-b3505c23a287")){
-                                        log.info("[ TODO debugging ] count < size and counter num is {} ,list size is {}, pageNum is {} :", counter.get(),qiMoorWebChat.size(),pageNum);
-                                        log.info("[ TODO debugging ] beginTime {}, endTime {} , :", beginTime, endTime);
-                                    }
                                     if (counter.get() < qiMoorWebChat.size()) {
                                         counter.incrementAndGet();
                                         paramsMap.put(stateKey, string2ByteBuffer(beginTime.get() + "_" + endTime.get() + "_" + pageNum.get(), StandardCharsets.UTF_8));
@@ -199,6 +194,7 @@ public class QiMoorSource extends PushSource<byte[]> {
                                     updateOperation(stateKey, state);
 
                                 })));
+                        log.info("pageNum {} , beginTime {}, endTime {} , counter {}",pageNum.get(),beginTime.get(),endTime.get(),counter.get());
                     }
                 }
             } catch (Exception e) {
@@ -221,13 +217,13 @@ public class QiMoorSource extends PushSource<byte[]> {
         }
     }
 
-    private JsonObject dealWithSession(String beginTime, String endTime, AtomicInteger pageNum) {
+    private JsonObject dealWithSession(String beginTime, String endTime, Integer pageNum) {
         try {
             Map<String, Object> paramMap = new HashMap<>();
             paramMap.put("qimoor", collectQimoor);
             paramMap.put("beginTime", beginTime);
             paramMap.put("endTime", endTime);
-            paramMap.put("pageNum", pageNum.get());
+            paramMap.put("pageNum", pageNum);
             QiMoorClient qiMoorClient = Feign.builder().decoder(new GsonDecoder()).target(QiMoorClient.class, apiAdapterUrl);
             JsonObject jsonObject = qiMoorClient.pastWebChatCollect(paramMap);
             if (jsonObject == null) {
