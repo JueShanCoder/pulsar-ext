@@ -201,7 +201,13 @@ public class QiMoorSource extends PushSource<byte[]> {
                     }
                 }
             } catch (Exception e) {
-                throw new IllegalArgumentException(" [QiMoorSource] got Exception ...", e);
+//                throw new IllegalArgumentException(" [QiMoorSource] got Exception ...", e);
+                try {
+                    log.error(" [QiMoorSource] got Exception, Thread will sleep 1000ms ...", e);
+                    Thread.sleep(5000);
+                } catch (InterruptedException interruptedException) {
+                    log.error(" [QiMoorSource] sleep got exception ...", e);
+                }
             } finally {
                 if (hiConnection != null) {
                     try {
