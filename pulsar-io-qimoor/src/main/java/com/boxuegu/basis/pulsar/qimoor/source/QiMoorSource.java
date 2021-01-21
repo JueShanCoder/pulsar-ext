@@ -173,7 +173,7 @@ public class QiMoorSource extends PushSource<byte[]> {
                                         counter.incrementAndGet();
                                         paramsMap.put(stateKey, string2ByteBuffer(beginTime.get() + "_" + endTime.get() + "_" + pageNum.get(), StandardCharsets.UTF_8));
                                     } else {
-                                        counter.set(0);
+                                        counter.set(1);
                                         pageNum.incrementAndGet();
                                         // state storage by BK
 //                                        sourceContext.putState(stateKey, string2ByteBuffer(beginTime.get() + "_" + endTime.get() + "_" + pageNum.get(), StandardCharsets.UTF_8));
