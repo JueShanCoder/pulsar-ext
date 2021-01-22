@@ -111,6 +111,13 @@ public class QiMoorSourceConfig implements Serializable {
     )
     private String databaseName;
 
+    @FieldDoc(
+            required = true,
+            defaultValue = "",
+            sensitive = true,
+            help = " qimoor source topic name  "
+    )
+    private String sourceTopicName;
 
     public static QiMoorSourceConfig load(Map<String, Object> map) {
         Gson gson = new Gson();
