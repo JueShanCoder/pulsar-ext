@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -88,7 +89,6 @@ public class QiMoorSource extends PushSource<byte[]> {
         dataSource.setPassword(password);
 
         Executors.newSingleThreadExecutor().submit(() -> taskJob(sourceContext));
-
     }
 
     private void taskJob(SourceContext sourceContext) {
@@ -146,6 +146,7 @@ public class QiMoorSource extends PushSource<byte[]> {
                     updateOperation(stateKey, beginTime + "_" + endTime + "_" + pageNum);
                 } else {
                     List<QiMoorWebChat> qiMoorWebChat = getQiMoorWebChat(jsonObject, idWorker, gson);
+                    AtomicBoolean isSuccess = new AtomicBoolean(true);
                     if (!(qiMoorWebChat == null || qiMoorWebChat.isEmpty())) {
                         // 抛弃 consume 方式，改用 sourceContext.newOutputMessage() 方式
                         qiMoorWebChat.forEach(webChat -> {
@@ -153,11 +154,26 @@ public class QiMoorSource extends PushSource<byte[]> {
                             try {
                                 sourceContext.newOutputMessage(sourceContext.getOutputTopic(), Schema.BYTES).value(gson.toJson(webChat).getBytes(StandardCharsets.UTF_8)).send();
                             } catch (PulsarClientException e) {
-                                log.error("[QiMoorSource] Got PulsarClientException ...]", e);
+                                for (int i = 0; i < 5; i++){
+                                    try {
+                                        sourceContext.newOutputMessage(sourceContext.getOutputTopic(), Schema.BYTES).value(gson.toJson(webChat).getBytes(StandardCharsets.UTF_8)).send();
+                                        break;
+                                    } catch (PulsarClientException exception) {
+                                        if (i == 4){
+                                            log.info(" [QimoorSource send message fail ,Maximum number of retries reached, record the current offset value ....]");
+                                            pageNum.set(1);
+                                            endTime.set(webChat.getCreateTime());
+                                            updateOperation(stateKey,beginTime.get() + "_" + endTime.get() + "_" + pageNum.get());
+                                            isSuccess.set(false);
+                                        }
+                                    }
+                                }
                             }
                         });
-                        pageNum.incrementAndGet();
-                        updateOperation(stateKey, beginTime.get() + "_" + endTime.get() + "_" + pageNum.get());
+                        if (isSuccess.get()) {
+                            pageNum.incrementAndGet();
+                            updateOperation(stateKey, beginTime.get() + "_" + endTime.get() + "_" + pageNum.get());
+                        }
                     }
                 }
             } catch (Exception e) {
