@@ -58,7 +58,6 @@ public class QiMoorSource extends PushSource<byte[]> {
     private Integer clusterId;
     private Integer workerId;
     private String databaseName;
-    private String sourceTopicName;
     private HikariDataSource dataSource;
 
     final Gson gson = GsonBuilderUtil.create(false);
@@ -78,10 +77,9 @@ public class QiMoorSource extends PushSource<byte[]> {
         stateKey = qiMoorSourceConfig.getOffsetStateKey();
         clusterId = qiMoorSourceConfig.getSnowflakeClusterId();
         workerId = qiMoorSourceConfig.getSnowflakeWorkerId();
-        sourceTopicName = qiMoorSourceConfig.getSourceTopicName();
         if (apiAdapterUrl == null || collectQimoor == null || offsetBeginTime == null || timeDiff == null ||
                 isOpenTimeDiff == null || stateKey == null || clusterId == null || workerId == null ||
-                jdbcUrl == null || userName == null || password == null || databaseName == null || sourceTopicName == null) {
+                jdbcUrl == null || userName == null || password == null || databaseName == null) {
             throw new IllegalArgumentException(" Required parameters are not set... Please check the startup script !!! ");
         }
         dataSource = new HikariDataSource();
@@ -153,7 +151,7 @@ public class QiMoorSource extends PushSource<byte[]> {
                         qiMoorWebChat.forEach(webChat -> {
                             // state storage by mysql
                             try {
-                                sourceContext.newOutputMessage(sourceTopicName, Schema.BYTES).value(gson.toJson(webChat).getBytes(StandardCharsets.UTF_8)).send();
+                                sourceContext.newOutputMessage(sourceContext.getOutputTopic(), Schema.BYTES).value(gson.toJson(webChat).getBytes(StandardCharsets.UTF_8)).send();
                             } catch (PulsarClientException e) {
                                 log.error("[QiMoorSource] Got PulsarClientException ...]", e);
                             }
