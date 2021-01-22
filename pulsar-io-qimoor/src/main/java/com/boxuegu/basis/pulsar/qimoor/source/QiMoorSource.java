@@ -154,16 +154,16 @@ public class QiMoorSource extends PushSource<byte[]> {
                             try {
                                 sourceContext.newOutputMessage(sourceContext.getOutputTopic(), Schema.BYTES).value(gson.toJson(webChat).getBytes(StandardCharsets.UTF_8)).send();
                             } catch (PulsarClientException e) {
-                                for (int i = 0; i < 5; i++){
+                                for (int i = 0; i < 5; i++) {
                                     try {
                                         sourceContext.newOutputMessage(sourceContext.getOutputTopic(), Schema.BYTES).value(gson.toJson(webChat).getBytes(StandardCharsets.UTF_8)).send();
                                         break;
                                     } catch (PulsarClientException exception) {
-                                        if (i == 4){
+                                        if (i == 4) {
                                             log.info(" [QimoorSource send message fail ,Maximum number of retries reached, record the current offset value ....]");
                                             pageNum.set(1);
                                             endTime.set(webChat.getCreateTime());
-                                            updateOperation(stateKey,beginTime.get() + "_" + endTime.get() + "_" + pageNum.get());
+                                            updateOperation(stateKey, beginTime.get() + "_" + endTime.get() + "_" + pageNum.get());
                                             isSuccess.set(false);
                                         }
                                     }
