@@ -7,7 +7,6 @@ import com.boxuegu.basis.pulsar.qimoor.service.GetObjectService;
 import com.boxuegu.basis.pulsar.qimoor.service.impl.GetStateServiceImpl;
 import com.boxuegu.basis.pulsar.qimoor.snowflake.IdWorker;
 import com.boxuegu.basis.pulsar.qimoor.source.config.QiMoorSourceConfig;
-import com.boxuegu.basis.pulsar.qimoor.source.record.QiMoorSourceRecord;
 import com.boxuegu.basis.pulsar.qimoor.utils.MessyCodeCheckUtil;
 import com.boxuegu.basis.pulsar.qimoor.utils.TimeUtil;
 import com.boxuegu.basis.pulsar.qimoor.utils.gson.GsonBuilderUtil;
@@ -19,12 +18,13 @@ import com.zaxxer.hikari.HikariDataSource;
 import feign.Feign;
 import feign.gson.GsonDecoder;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.pulsar.client.api.PulsarClientException;
+import org.apache.pulsar.client.api.Schema;
 import org.apache.pulsar.io.core.PushSource;
 import org.apache.pulsar.io.core.SourceContext;
 import org.apache.pulsar.io.core.annotations.Connector;
 import org.apache.pulsar.io.core.annotations.IOType;
 
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -32,13 +32,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.boxuegu.basis.pulsar.qimoor.service.impl.GetStateServiceImpl.GetStateSQL;
 import static com.boxuegu.basis.pulsar.qimoor.service.impl.GetStateServiceImpl.insertState;
-import static com.boxuegu.basis.pulsar.qimoor.utils.ConvertBuffer.byteBuffer2String;
-import static com.boxuegu.basis.pulsar.qimoor.utils.ConvertBuffer.string2ByteBuffer;
 import static com.boxuegu.basis.pulsar.qimoor.utils.TimeUtil.timeDiff;
 
 
@@ -88,17 +87,15 @@ public class QiMoorSource extends PushSource<byte[]> {
         dataSource.setJdbcUrl(jdbcUrl);
         dataSource.setUsername(userName);
         dataSource.setPassword(password);
-        Executors.newSingleThreadExecutor().submit(() -> taskJob(sourceContext));
 
+        Executors.newSingleThreadExecutor().submit(() -> taskJob(sourceContext));
     }
 
     private void taskJob(SourceContext sourceContext) {
         IdWorker idWorker;
         AtomicReference<String> beginTime = new AtomicReference<>("");
         AtomicReference<String> endTime = new AtomicReference<>("");
-        AtomicInteger counter = new AtomicInteger(1);
-        AtomicInteger pageNum = new AtomicInteger(0);
-        Map<String, ByteBuffer> paramsMap = new HashMap<>();
+        AtomicInteger pageNum = new AtomicInteger(1);
         try {
             idWorker = new IdWorker(clusterId.longValue(), workerId.longValue());
         } catch (Exception e) {
@@ -108,20 +105,6 @@ public class QiMoorSource extends PushSource<byte[]> {
             Connection hiConnection = null;
             try {
                 JsonObject jsonObject;
-
-                // state storage by BK
-//                ByteBuffer buffer = sourceContext.getState(stateKey);
-//                if (buffer != null) {
-//                    String state = byteBuffer2String(buffer, StandardCharsets.UTF_8);
-//                    String[] offSet = state.split("_");
-//                    beginTime.set(offSet[0]);
-//                    endTime.set(offSet[1]);
-//                    pageNum.set(Integer.parseInt(offSet[2]));
-//                } else {
-//                    beginTime.set(offsetBeginTime);
-//                    endTime.set(TimeUtil.getNowWithNoSecond());
-//                    pageNum.set(1);
-//                }
                 hiConnection = dataSource.getConnection();
                 // state storage by mysql
                 GetObjectService getObjectService = new GetStateServiceImpl();
@@ -159,46 +142,41 @@ public class QiMoorSource extends PushSource<byte[]> {
                     pageNum.set(1);
                     beginTime.set(endTime.get());
                     endTime.set(TimeUtil.getNowWithNoSecond());
-                    // state storage by BK
-//                    sourceContext.putState(stateKey, string2ByteBuffer(beginTime + "_" + endTime + "_" + pageNum, StandardCharsets.UTF_8));
                     // state storage by mysql
                     updateOperation(stateKey, beginTime + "_" + endTime + "_" + pageNum);
                 } else {
                     List<QiMoorWebChat> qiMoorWebChat = getQiMoorWebChat(jsonObject, idWorker, gson);
+                    AtomicBoolean isSuccess = new AtomicBoolean(true);
                     if (!(qiMoorWebChat == null || qiMoorWebChat.isEmpty())) {
-
-                        qiMoorWebChat.forEach(webChat -> consume(new QiMoorSourceRecord(webChat,
-                                (v) -> {
-                                    if (counter.get() < qiMoorWebChat.size()) {
-                                        counter.incrementAndGet();
-                                        paramsMap.put(stateKey, string2ByteBuffer(beginTime.get() + "_" + endTime.get() + "_" + pageNum.get(), StandardCharsets.UTF_8));
-                                    } else {
-                                        counter.set(1);
-                                        pageNum.incrementAndGet();
-                                        // state storage by BK
-//                                        sourceContext.putState(stateKey, string2ByteBuffer(beginTime.get() + "_" + endTime.get() + "_" + pageNum.get(), StandardCharsets.UTF_8));
-
-                                        // state storage by mysql
-                                        updateOperation(stateKey, beginTime.get() + "_" + endTime.get() + "_" + pageNum.get());
+                        // 抛弃 consume 方式，改用 sourceContext.newOutputMessage() 方式
+                        qiMoorWebChat.forEach(webChat -> {
+                            // state storage by mysql
+                            try {
+                                sourceContext.newOutputMessage(sourceContext.getOutputTopic(), Schema.BYTES).value(gson.toJson(webChat).getBytes(StandardCharsets.UTF_8)).send();
+                            } catch (PulsarClientException e) {
+                                for (int i = 0; i < 5; i++) {
+                                    try {
+                                        sourceContext.newOutputMessage(sourceContext.getOutputTopic(), Schema.BYTES).value(gson.toJson(webChat).getBytes(StandardCharsets.UTF_8)).send();
+                                        break;
+                                    } catch (PulsarClientException exception) {
+                                        if (i == 4) {
+                                            log.info(" [QimoorSource send message fail ,Maximum number of retries reached, record the current offset value ....]");
+                                            pageNum.set(1);
+                                            endTime.set(webChat.getCreateTime());
+                                            updateOperation(stateKey, beginTime.get() + "_" + endTime.get() + "_" + pageNum.get());
+                                            isSuccess.set(false);
+                                        }
                                     }
-                                },
-                                (v) -> {
-                                    endTime.set(webChat.getCreateTime());
-                                    pageNum.set(1);
-                                    log.info(" receive fail response .. ");
-                                    // state storage by BK
-//                                    sourceContext.putState(stateKey, paramsMap.get(stateKey));
-
-                                    // state storage by mysql
-                                    String state = byteBuffer2String(paramsMap.get(stateKey), StandardCharsets.UTF_8);
-                                    updateOperation(stateKey, state);
-
-                                })));
-                        log.info("pageNum {} , beginTime {}, endTime {} , counter {}",pageNum.get(),beginTime.get(),endTime.get(),counter.get());
+                                }
+                            }
+                        });
+                        if (isSuccess.get()) {
+                            pageNum.incrementAndGet();
+                            updateOperation(stateKey, beginTime.get() + "_" + endTime.get() + "_" + pageNum.get());
+                        }
                     }
                 }
             } catch (Exception e) {
-//                throw new IllegalArgumentException(" [QiMoorSource] got Exception ...", e);
                 try {
                     log.error(" [QiMoorSource] got Exception, Thread will sleep 1000ms ...", e);
                     Thread.sleep(5000);
@@ -224,6 +202,7 @@ public class QiMoorSource extends PushSource<byte[]> {
             paramMap.put("beginTime", beginTime);
             paramMap.put("endTime", endTime);
             paramMap.put("pageNum", pageNum);
+            log.info("请求七陌接口参数 beginTime {}, endTime {}, pageNum {}", beginTime, endTime, pageNum);
             QiMoorClient qiMoorClient = Feign.builder().decoder(new GsonDecoder()).target(QiMoorClient.class, apiAdapterUrl);
             JsonObject jsonObject = qiMoorClient.pastWebChatCollect(paramMap);
             if (jsonObject == null) {
