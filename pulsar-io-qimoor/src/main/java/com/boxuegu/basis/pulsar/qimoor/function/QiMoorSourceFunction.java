@@ -65,7 +65,7 @@ public class QiMoorSourceFunction implements Function<byte[], Void> {
         if (!qiMoorWebChat.getStatus().equalsIgnoreCase("finish") && !qiMoorWebChat.getStatus().equalsIgnoreCase("invalid")) {
             // unclose session delayed 3Min send
             try {
-                context.newOutputMessage(qiMoorSourceFunctionConfig.getUnCloseSessionTopicName(), Schema.BYTES).value(gson.toJson(qiMoorWebChat).getBytes(StandardCharsets.UTF_8)).deliverAfter(1L, TimeUnit.MINUTES).send();
+                context.newOutputMessage(qiMoorSourceFunctionConfig.getUnCloseSessionTopicName(), Schema.BYTES).value(gson.toJson(qiMoorWebChat).getBytes(StandardCharsets.UTF_8)).deliverAfter(3L, TimeUnit.MINUTES).send();
                 context.getCurrentRecord().ack();
                 log.info("[QiMoorSourceFunction] 消息成功延迟发送到 {} 队列 ... [7moor 数据] SessionId {} Id {}] ", qiMoorSourceFunctionConfig.getUnCloseSessionTopicName(), qiMoorWebChat.get_id(), qiMoorWebChat.getId());
             } catch (PulsarClientException e) {

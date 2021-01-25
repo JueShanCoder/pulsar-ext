@@ -55,6 +55,7 @@ public class UnCloseSessionFunction implements Function<byte[], Void> {
         paramMap.put("_id", qiMoorWebChat.get_id());
         JsonObject jsonObject = null;
         int maxRetryTimes = unCloseSessionFunctionConfig.getMaxRetryTimes();
+        log.info("[UnCloseSessionFunction ] sessionId is {} , session status is {} ",qiMoorWebChat.get_id(), qiMoorWebChat.getStatus());
         // 调用七陌查询会话是否完成
         for (int retry = 1; retry < maxRetryTimes; retry++) {
             try {
