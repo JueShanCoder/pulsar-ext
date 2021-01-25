@@ -59,6 +59,7 @@ public class WebChatMsgFunction implements Function<byte[], Void> {
         }
 
         WebChatSink webChatSink = gsonMsgTrue.fromJson(new String(input), WebChatSink.class);
+        log.info("[webChatMsgFunction ] sessionId is {} , replyMsgCount is {} , msgCount is {}", webChatSink.getSessionId(),webChatSink.getReplyMsgCount(),webChatSink.getMsgCount());
         Map<String, String> properties = new HashMap<>();
         properties.put("ACTION", "INSERT");
         properties.put("TARGET", webChatMsgFunctionConfig.getTableName());
