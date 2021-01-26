@@ -55,7 +55,6 @@ public class UnCloseSessionFunction implements Function<byte[], Void> {
         paramMap.put("_id", qiMoorWebChat.get_id());
         JsonObject jsonObject = null;
         int maxRetryTimes = unCloseSessionFunctionConfig.getMaxRetryTimes();
-        log.info("[UnCloseSessionFunction ] sessionId is {} , session status is {} ",qiMoorWebChat.get_id(), qiMoorWebChat.getStatus());
         // 调用七陌查询会话是否完成
         for (int retry = 1; retry < maxRetryTimes; retry++) {
             try {
@@ -82,6 +81,7 @@ public class UnCloseSessionFunction implements Function<byte[], Void> {
         List<QiMoorWebChat> webChats = getQiMoorWebChat(jsonObject, idWorker, gson);
         if (!(webChats == null || webChats.isEmpty())) {
             webChats.forEach(webChat -> {
+                log.info("[UnCloseSessionFunction ] sessionId is {} , session status is {} ",webChat.get_id(), webChat.getStatus());
                 if (!webChat.getStatus().equalsIgnoreCase("finish") && !webChat.getStatus().equalsIgnoreCase("invalid")) {
                     try {
                         context.newOutputMessage(unCloseSessionFunctionConfig.getUnCloseSessionTopicName(), Schema.BYTES).value(gson.toJson(webChat).getBytes(StandardCharsets.UTF_8)).deliverAfter(3L, TimeUnit.MINUTES);
@@ -91,7 +91,7 @@ public class UnCloseSessionFunction implements Function<byte[], Void> {
                         log.error("[UnCloseSessionFunction] Got PulsarClientException, fail响应，消息即将进入死信队列 ...]", e);
                         context.getCurrentRecord().fail();
                     }
-                } else if (qiMoorWebChat.getStatus().equalsIgnoreCase("finish") || qiMoorWebChat.getStatus().equalsIgnoreCase("invalid")) {
+                } else if (webChat.getStatus().equalsIgnoreCase("finish") || webChat.getStatus().equalsIgnoreCase("invalid")) {
                     try {
                         WebChatSink webChatSink = parseSession(qiMoorWebChat, gson, unCloseSessionFunctionConfig.getCourseTypes(), unCloseSessionFunctionConfig.getJdbcUrl(),
                                 unCloseSessionFunctionConfig.getUserName(), unCloseSessionFunctionConfig.getPassword(), unCloseSessionFunctionConfig.getCrmDatabaseName(), unCloseSessionFunctionConfig.getBxgDatabaseName());
