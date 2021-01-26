@@ -150,6 +150,7 @@ public class QiMoorSource extends PushSource<byte[]> {
                     if (!(qiMoorWebChat == null || qiMoorWebChat.isEmpty())) {
                         // 抛弃 consume 方式，改用 sourceContext.newOutputMessage() 方式
                         qiMoorWebChat.forEach(webChat -> {
+                            log.info(" webchat status is {} , sessionId is {}",webChat.getStatus(),webChat.get_id());
                             // state storage by mysql
                             try {
                                 sourceContext.newOutputMessage(sourceContext.getOutputTopic(), Schema.BYTES).value(gson.toJson(webChat).getBytes(StandardCharsets.UTF_8)).send();
