@@ -83,30 +83,25 @@ public class UnCloseSessionFunction implements Function<byte[], Void> {
         if (!(webChats == null || webChats.isEmpty())) {
             webChats.forEach(webChat -> {
                 if (!webChat.getStatus().equalsIgnoreCase("finish") && !webChat.getStatus().equalsIgnoreCase("invalid")) {
-                    context.getUserConfigValue("un-close-session-topic-name").ifPresent(topicName -> {
-                        try {
-                            context.newOutputMessage((String) topicName, Schema.BYTES).value(gson.toJson(webChat).getBytes(StandardCharsets.UTF_8)).deliverAfter(3L, TimeUnit.MINUTES);
-                            context.getCurrentRecord().ack();
-                            log.info("[UnCloseSessionFunction] 会话仍为未完成状态，[7moor] sessionId {},Id {}, 消息成功发送到 {} 队列...", webChat.get_id(), webChat.getId(), topicName);
-                        } catch (PulsarClientException e) {
-                            log.error("[UnCloseSessionFunction] Got PulsarClientException, fail响应，消息即将进入死信队列 ...]", e);
-                            context.getCurrentRecord().fail();
-                        }
-                    });
+                    try {
+                        context.newOutputMessage(unCloseSessionFunctionConfig.getUnCloseSessionTopicName(), Schema.BYTES).value(gson.toJson(webChat).getBytes(StandardCharsets.UTF_8)).deliverAfter(3L, TimeUnit.MINUTES);
+                        context.getCurrentRecord().ack();
+                        log.info("[UnCloseSessionFunction] 会话仍为未完成状态，[7moor] sessionId {},Id {}, 消息成功发送到 {} 队列...", webChat.get_id(), webChat.getId(), unCloseSessionFunctionConfig.getUnCloseSessionTopicName());
+                    } catch (PulsarClientException e) {
+                        log.error("[UnCloseSessionFunction] Got PulsarClientException, fail响应，消息即将进入死信队列 ...]", e);
+                        context.getCurrentRecord().fail();
+                    }
                 } else if (qiMoorWebChat.getStatus().equalsIgnoreCase("finish") || qiMoorWebChat.getStatus().equalsIgnoreCase("invalid")) {
-                    context.getUserConfigValue("close-session-topic-name").ifPresent(topicName -> {
-                        try {
-                            WebChatSink webChatSink = parseSession(qiMoorWebChat, gson, unCloseSessionFunctionConfig.getCourseTypes(), unCloseSessionFunctionConfig.getJdbcUrl(),
-                                    unCloseSessionFunctionConfig.getUserName(), unCloseSessionFunctionConfig.getPassword(), unCloseSessionFunctionConfig.getCrmDatabaseName(), unCloseSessionFunctionConfig.getBxgDatabaseName());
-                            context.newOutputMessage((String) topicName, Schema.BYTES).value(gson.toJson(webChatSink).getBytes(StandardCharsets.UTF_8)).properties(properties).send();
-                            context.getCurrentRecord().ack();
-                            log.info("[UnCloseSessionFunction] 会话为已完成状态，[7moor] sessionId {},Id {}, 消息成功发送到 {} 队列...", webChat.get_id(), webChat.getId(), topicName);
-                        } catch (Exception e) {
-                            log.error("[UnCloseSessionFunction] Got exception, fail响应，消息即将进入死信队列 ...]", e);
-                            context.getCurrentRecord().fail();
-                        }
-
-                    });
+                    try {
+                        WebChatSink webChatSink = parseSession(qiMoorWebChat, gson, unCloseSessionFunctionConfig.getCourseTypes(), unCloseSessionFunctionConfig.getJdbcUrl(),
+                                unCloseSessionFunctionConfig.getUserName(), unCloseSessionFunctionConfig.getPassword(), unCloseSessionFunctionConfig.getCrmDatabaseName(), unCloseSessionFunctionConfig.getBxgDatabaseName());
+                        context.newOutputMessage(unCloseSessionFunctionConfig.getCloseSessionTopicName(), Schema.BYTES).value(gson.toJson(webChatSink).getBytes(StandardCharsets.UTF_8)).properties(properties).send();
+                        context.getCurrentRecord().ack();
+                        log.info("[UnCloseSessionFunction] 会话为已完成状态，[7moor] sessionId {},Id {}, 消息成功发送到 {} 队列...", webChat.get_id(), webChat.getId(), unCloseSessionFunctionConfig.getCloseSessionTopicName());
+                    } catch (Exception e) {
+                        log.error("[UnCloseSessionFunction] Got exception, fail响应，消息即将进入死信队列 ...]", e);
+                        context.getCurrentRecord().fail();
+                    }
                 }
             });
         }
