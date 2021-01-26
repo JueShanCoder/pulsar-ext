@@ -33,6 +33,7 @@ import static com.boxuegu.basis.pulsar.qimoor.source.QiMoorSource.getQiMoorWebCh
 public class UnCloseSessionFunction implements Function<byte[], Void> {
 
     final Gson gson = GsonBuilderUtil.create(false);
+    final Gson gsonMsgTrue = GsonBuilderUtil.create(true);
 
     @Override
     public Void process(byte[] input, Context context) throws InterruptedException {
@@ -96,7 +97,7 @@ public class UnCloseSessionFunction implements Function<byte[], Void> {
                     try {
                         WebChatSink webChatSink = parseSession(webChat, gson, unCloseSessionFunctionConfig.getCourseTypes(), unCloseSessionFunctionConfig.getJdbcUrl(),
                                 unCloseSessionFunctionConfig.getUserName(), unCloseSessionFunctionConfig.getPassword(), unCloseSessionFunctionConfig.getCrmDatabaseName(), unCloseSessionFunctionConfig.getBxgDatabaseName());
-                        context.newOutputMessage(unCloseSessionFunctionConfig.getCloseSessionTopicName(), Schema.BYTES).value(gson.toJson(webChatSink).getBytes(StandardCharsets.UTF_8)).properties(properties).send();
+                        context.newOutputMessage(unCloseSessionFunctionConfig.getCloseSessionTopicName(), Schema.BYTES).value(gsonMsgTrue.toJson(webChatSink).getBytes(StandardCharsets.UTF_8)).properties(properties).send();
                         context.getCurrentRecord().ack();
                         log.info("[UnCloseSessionFunction] 会话为已完成状态，[7moor] sessionId {},Id {}, 消息成功发送到 {} 队列...", webChat.get_id(), webChat.getId(), unCloseSessionFunctionConfig.getCloseSessionTopicName());
                     } catch (Exception e) {
