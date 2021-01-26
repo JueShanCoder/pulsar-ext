@@ -37,7 +37,7 @@ public class TimeUtil {
     }
 
     public static String getNowWithNoSecond() {
-        SimpleDateFormat dateFormatGmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:00");
+        SimpleDateFormat dateFormatGmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         dateFormatGmt.setTimeZone(TimeZone.getTimeZone("GMT+8"));
         return dateFormatGmt.format(new Date());
     }
