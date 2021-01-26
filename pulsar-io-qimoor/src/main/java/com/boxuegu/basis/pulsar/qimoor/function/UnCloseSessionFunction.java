@@ -46,6 +46,7 @@ public class UnCloseSessionFunction implements Function<byte[], Void> {
         }
 
         QiMoorWebChat qiMoorWebChat = gson.fromJson(new String(input), QiMoorWebChat.class);
+        log.info("[UnCloseSessionFunction] receive sessionId is {}, id is {}",qiMoorWebChat.get_id(),qiMoorWebChat.getId());
         Map<String, String> properties = new HashMap<>();
         properties.put("ACTION", "INSERT");
         properties.put("TARGET", unCloseSessionFunctionConfig.getTableName());
@@ -93,7 +94,7 @@ public class UnCloseSessionFunction implements Function<byte[], Void> {
                     }
                 } else if (webChat.getStatus().equalsIgnoreCase("finish") || webChat.getStatus().equalsIgnoreCase("invalid")) {
                     try {
-                        WebChatSink webChatSink = parseSession(qiMoorWebChat, gson, unCloseSessionFunctionConfig.getCourseTypes(), unCloseSessionFunctionConfig.getJdbcUrl(),
+                        WebChatSink webChatSink = parseSession(webChat, gson, unCloseSessionFunctionConfig.getCourseTypes(), unCloseSessionFunctionConfig.getJdbcUrl(),
                                 unCloseSessionFunctionConfig.getUserName(), unCloseSessionFunctionConfig.getPassword(), unCloseSessionFunctionConfig.getCrmDatabaseName(), unCloseSessionFunctionConfig.getBxgDatabaseName());
                         context.newOutputMessage(unCloseSessionFunctionConfig.getCloseSessionTopicName(), Schema.BYTES).value(gson.toJson(webChatSink).getBytes(StandardCharsets.UTF_8)).properties(properties).send();
                         context.getCurrentRecord().ack();
