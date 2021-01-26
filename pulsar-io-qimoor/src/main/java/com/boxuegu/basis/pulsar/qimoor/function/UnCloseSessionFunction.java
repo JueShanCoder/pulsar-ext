@@ -46,7 +46,6 @@ public class UnCloseSessionFunction implements Function<byte[], Void> {
         }
 
         QiMoorWebChat qiMoorWebChat = gson.fromJson(new String(input), QiMoorWebChat.class);
-        log.info("[UnCloseSessionFunction] receive sessionId is {}, id is {}",qiMoorWebChat.get_id(),qiMoorWebChat.getId());
         Map<String, String> properties = new HashMap<>();
         properties.put("ACTION", "INSERT");
         properties.put("TARGET", unCloseSessionFunctionConfig.getTableName());
@@ -85,7 +84,8 @@ public class UnCloseSessionFunction implements Function<byte[], Void> {
                 log.info("[UnCloseSessionFunction ] sessionId is {} , session status is {} ",webChat.get_id(), webChat.getStatus());
                 if (!webChat.getStatus().equalsIgnoreCase("finish") && !webChat.getStatus().equalsIgnoreCase("invalid")) {
                     try {
-                        context.newOutputMessage(unCloseSessionFunctionConfig.getUnCloseSessionTopicName(), Schema.BYTES).value(gson.toJson(webChat).getBytes(StandardCharsets.UTF_8)).deliverAfter(3L, TimeUnit.MINUTES);
+                        context.newOutputMessage(unCloseSessionFunctionConfig.getUnCloseSessionTopicName(), Schema.BYTES).value(gson.toJson(webChat).getBytes(StandardCharsets.UTF_8)).deliverAfter(3L, TimeUnit.MINUTES).send();
+
                         context.getCurrentRecord().ack();
                         log.info("[UnCloseSessionFunction] 会话仍为未完成状态，[7moor] sessionId {},Id {}, 消息成功发送到 {} 队列...", webChat.get_id(), webChat.getId(), unCloseSessionFunctionConfig.getUnCloseSessionTopicName());
                     } catch (PulsarClientException e) {
