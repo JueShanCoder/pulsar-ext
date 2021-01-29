@@ -15,6 +15,7 @@ import com.boxuegu.basis.pulsar.qimoor.service.impl.JdbcServiceImpl;
 import com.boxuegu.basis.pulsar.qimoor.utils.StringUtils;
 import com.boxuegu.basis.pulsar.qimoor.utils.gson.GsonBuilderUtil;
 import com.google.gson.Gson;
+import com.zaxxer.hikari.HikariDataSource;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.cglib.beans.BeanCopier;
 import org.apache.pulsar.client.api.PulsarClientException;
@@ -46,7 +47,6 @@ import static com.boxuegu.basis.pulsar.qimoor.utils.UrlParsingUtils.*;
 public class QiMoorSourceFunction implements Function<byte[], Void> {
 
     final Gson gson = GsonBuilderUtil.create(false);
-
     @Override
     public Void process(byte[] input, Context context) {
         QiMoorSourceFunctionConfig qiMoorSourceFunctionConfig = QiMoorSourceFunctionConfig.load(context.getUserConfigMap());
@@ -63,6 +63,12 @@ public class QiMoorSourceFunction implements Function<byte[], Void> {
         properties.put("ACTION", "INSERT");
         properties.put("TARGET", qiMoorSourceFunctionConfig.getTableName());
         properties.put("SQLMODE", "INSERT_IGNORE_INVALID");
+        HikariDataSource dataSource = new HikariDataSource();
+        dataSource.setJdbcUrl(qiMoorSourceFunctionConfig.getJdbcUrl());
+        dataSource.setUsername(qiMoorSourceFunctionConfig.getUserName());
+        dataSource.setPassword(qiMoorSourceFunctionConfig.getPassword());
+
+
         if (!qiMoorWebChat.getStatus().equalsIgnoreCase("finish") && !qiMoorWebChat.getStatus().equalsIgnoreCase("invalid")) {
             // unclose session delayed 3Min send
             try {
@@ -77,8 +83,7 @@ public class QiMoorSourceFunction implements Function<byte[], Void> {
             // close session
             try {
                 Gson webGson = GsonBuilderUtil.create(true);
-                WebChatSink webChatSink = parseSession(qiMoorWebChat, gson, qiMoorSourceFunctionConfig.getCourseTypes(), qiMoorSourceFunctionConfig.getJdbcUrl(),
-                        qiMoorSourceFunctionConfig.getUserName(), qiMoorSourceFunctionConfig.getPassword(),qiMoorSourceFunctionConfig.getCrmDatabaseName(),qiMoorSourceFunctionConfig.getBxgDatabaseName());
+                WebChatSink webChatSink = parseSession(qiMoorWebChat, gson, qiMoorSourceFunctionConfig.getCourseTypes(), dataSource,qiMoorSourceFunctionConfig.getCrmDatabaseName(),qiMoorSourceFunctionConfig.getBxgDatabaseName());
                 context.newOutputMessage(qiMoorSourceFunctionConfig.getCloseSessionTopicName(), Schema.BYTES).value(webGson.toJson(webChatSink).getBytes(StandardCharsets.UTF_8)).properties(properties).send();
                 context.getCurrentRecord().ack();
                 log.info("[QiMoorSourceFunction] 消息成功发送到 {} 队列 [7moor 数据] SessionId {} Id {}", qiMoorSourceFunctionConfig.getCloseSessionTopicName(), qiMoorWebChat.get_id(), qiMoorWebChat.getId());
@@ -96,7 +101,7 @@ public class QiMoorSourceFunction implements Function<byte[], Void> {
      * @param qiMoorWebChat qimoor source data
      */
     public static WebChatSink parseSession(QiMoorWebChat qiMoorWebChat, Gson gson, String courseTypes,
-                                           String jdbcUrl, String userName, String password, String crmDatabaseName, String bxgDatabaseName) throws Exception {
+                                           HikariDataSource dataSource, String crmDatabaseName, String bxgDatabaseName) throws Exception {
         WebChatSink webChat = new WebChatSink();
         BeanCopier beanCopier = BeanCopier.create(QiMoorWebChat.class, WebChatSink.class, false);
         beanCopier.copy(qiMoorWebChat, webChat, null);
@@ -121,18 +126,15 @@ public class QiMoorSourceFunction implements Function<byte[], Void> {
             webChat.setCreateTime(getISO8601TimeByStr(qiMoorWebChat.getCreateTime()));
         webChat.setSession(gson.toJson(qiMoorWebChat));
         // Parsing url -> UTM， url -> subjectId
-        conversion(webChat, qiMoorWebChat.getFromUrl(), courseTypes, jdbcUrl, userName, password,crmDatabaseName,bxgDatabaseName);
+        conversion(webChat, qiMoorWebChat.getFromUrl(), courseTypes,crmDatabaseName,bxgDatabaseName,dataSource);
         return webChat;
     }
 
-    public static void conversion(WebChatSink webChat, String fromUrl, String courseTypes,
-                                  String jdbcUrl, String userName, String password,String crmDatabaseName,String bxgDatabaseName) throws Exception {
+    public static void conversion(WebChatSink webChat, String fromUrl, String courseTypes, String crmDatabaseName,String bxgDatabaseName,HikariDataSource dataSource) throws Exception {
         if (isBlank(fromUrl)) {
             webChat.setMenuId(0L);
             return;
         }
-        JdbcService jdbcService = new JdbcServiceImpl();
-        Connection connection = jdbcService.getConnection(jdbcUrl, userName, password);
         GetObjectService getObjectService;
         // utm 相关
         Utm utm = parseUrl(fromUrl);
@@ -158,7 +160,7 @@ public class QiMoorSourceFunction implements Function<byte[], Void> {
                 return;
             }
             getObjectService = new GetCourseServiceImpl();
-            RemoteCourse remoteCourse = (RemoteCourse) getObjectService.getObject(connection, getRemoteCourseSQL(courseId,bxgDatabaseName));
+            RemoteCourse remoteCourse = (RemoteCourse) getObjectService.getObject(dataSource.getConnection(), getRemoteCourseSQL(courseId,bxgDatabaseName));
             if (remoteCourse == null) {
                 // To be determined
                 webChat.setMenuId(0L);
@@ -179,7 +181,7 @@ public class QiMoorSourceFunction implements Function<byte[], Void> {
                 return;
             }
             getObjectService = new GetArticleServiceImpl();
-            RemoteArticle remoteArticle = (RemoteArticle) getObjectService.getObject(connection, getArticleSQL(articleId,bxgDatabaseName));
+            RemoteArticle remoteArticle = (RemoteArticle) getObjectService.getObject(dataSource.getConnection(), getArticleSQL(articleId,bxgDatabaseName));
             if (remoteArticle == null) {
                 // To be determined
                 webChat.setMenuId(0L);
@@ -188,7 +190,7 @@ public class QiMoorSourceFunction implements Function<byte[], Void> {
             webChat.setMenuId(remoteArticle.getMenuId().longValue());
         }
         getObjectService = new GetUrlSubjectMapping();
-        RemoteUrlSubjectMapping remoteUrlSubjectMapping = (RemoteUrlSubjectMapping) getObjectService.getObject(connection, getUrlSubjectMapper(url,crmDatabaseName));
+        RemoteUrlSubjectMapping remoteUrlSubjectMapping = (RemoteUrlSubjectMapping) getObjectService.getObject(dataSource.getConnection(), getUrlSubjectMapper(url,crmDatabaseName));
         if (remoteUrlSubjectMapping == null) {
             webChat.setMenuId(0L);
             return;

@@ -8,6 +8,7 @@ import com.boxuegu.basis.pulsar.qimoor.snowflake.IdWorker;
 import com.boxuegu.basis.pulsar.qimoor.utils.gson.GsonBuilderUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.zaxxer.hikari.HikariDataSource;
 import feign.Feign;
 import feign.gson.GsonDecoder;
 import lombok.extern.slf4j.Slf4j;
@@ -54,6 +55,10 @@ public class UnCloseSessionFunction implements Function<byte[], Void> {
         Map<String, Object> paramMap = new HashMap<>();
         paramMap.put("qimoor", unCloseSessionFunctionConfig.getCollectQimoor());
         paramMap.put("_id", qiMoorWebChat.get_id());
+        HikariDataSource dataSource = new HikariDataSource();
+        dataSource.setJdbcUrl(unCloseSessionFunctionConfig.getJdbcUrl());
+        dataSource.setUsername(unCloseSessionFunctionConfig.getUserName());
+        dataSource.setPassword(unCloseSessionFunctionConfig.getPassword());
         JsonObject jsonObject = null;
         int maxRetryTimes = unCloseSessionFunctionConfig.getMaxRetryTimes();
         // 调用七陌查询会话是否完成
@@ -97,8 +102,7 @@ public class UnCloseSessionFunction implements Function<byte[], Void> {
                         }
                     } else if (webChat.getStatus().equalsIgnoreCase("finish") || webChat.getStatus().equalsIgnoreCase("invalid")) {
                         try {
-                            WebChatSink webChatSink = parseSession(webChat, gson, unCloseSessionFunctionConfig.getCourseTypes(), unCloseSessionFunctionConfig.getJdbcUrl(),
-                                    unCloseSessionFunctionConfig.getUserName(), unCloseSessionFunctionConfig.getPassword(), unCloseSessionFunctionConfig.getCrmDatabaseName(), unCloseSessionFunctionConfig.getBxgDatabaseName());
+                            WebChatSink webChatSink = parseSession(webChat, gson, unCloseSessionFunctionConfig.getCourseTypes(),dataSource, unCloseSessionFunctionConfig.getCrmDatabaseName(), unCloseSessionFunctionConfig.getBxgDatabaseName());
                             context.newOutputMessage(unCloseSessionFunctionConfig.getCloseSessionTopicName(), Schema.BYTES).value(gsonMsgTrue.toJson(webChatSink).getBytes(StandardCharsets.UTF_8)).properties(properties).send();
                             context.getCurrentRecord().ack();
                             log.info("[UnCloseSessionFunction] 会话为已完成状态，[7moor] sessionId {},Id {}, 消息成功发送到 {} 队列...", webChat.get_id(), webChat.getId(), unCloseSessionFunctionConfig.getCloseSessionTopicName());
