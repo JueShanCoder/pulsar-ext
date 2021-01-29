@@ -1,10 +1,6 @@
 package com.boxuegu.basis.pulsar.qimoor.entity.remote;
 
-import com.google.common.collect.Maps;
 import lombok.*;
-
-import java.util.Arrays;
-import java.util.Map;
 
 @Getter
 @Setter
@@ -28,11 +24,6 @@ public class RemoteCourse {
     private Integer menuId;
 
     /**
-     * 学科名字
-     */
-    private String menuName;
-
-    /**
      * 现价
      */
     private Double currentPrice;
@@ -45,31 +36,6 @@ public class RemoteCourse {
     /**
      * 状态：已下架0、已启用1、未启用2
      */
-    private Integer status;
+    private String status;
 
-    @AllArgsConstructor
-    public enum Status {
-
-        /**
-         * 已下架0、已启用1、未启用2
-         */
-        DOWN(0, "已下架"),
-        ENABLE(1, "已启用"),
-        DISABLED(2, "未启用"),
-        ;
-
-        @Getter
-        private final int status;
-        @Getter
-        private final String desc;
-
-        private static final Map<Integer, Status> MAP = Maps.uniqueIndex(
-                Arrays.asList(Status.values()),
-                Status::getStatus
-        );
-
-        public static Status get(int type) {
-            return MAP.get(type);
-        }
-    }
 }
