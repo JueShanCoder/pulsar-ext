@@ -209,7 +209,6 @@ public class QiMoorSource extends PushSource<byte[]> {
             if (jsonObject == null) {
                 throw new IllegalArgumentException(" Argument jsonObject should not be null ");
             }
-            jsonObject.getAsJsonObject("data").addProperty("beginTimeSource", beginTime);
             if (jsonObject.get("code").getAsInt() != 200)
                 return null;
             return jsonObject;
