@@ -58,6 +58,7 @@ public class QiMoorSourceFunction implements Function<byte[], Void> {
             throw new IllegalArgumentException(" Required parameters are not set... Please check the startup script !!! ");
         }
         QiMoorWebChat qiMoorWebChat = gson.fromJson(new String(input), QiMoorWebChat.class);
+        log.info("[QimoorSource ] sessionId is {}, status is {}",qiMoorWebChat.get_id(),qiMoorWebChat.getStatus());
         Map<String, String> properties = new HashMap<>();
         properties.put("ACTION", "INSERT");
         properties.put("TARGET", qiMoorSourceFunctionConfig.getTableName());
