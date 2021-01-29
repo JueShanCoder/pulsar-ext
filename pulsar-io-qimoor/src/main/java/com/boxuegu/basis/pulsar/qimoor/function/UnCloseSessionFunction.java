@@ -35,7 +35,7 @@ public class UnCloseSessionFunction implements Function<byte[], Void> {
 
     final Gson gson = GsonBuilderUtil.create(false);
     final Gson gsonMsgTrue = GsonBuilderUtil.create(true);
-
+    HikariDataSource dataSource = null;
     @Override
     public Void process(byte[] input, Context context) throws InterruptedException {
         UnCloseSessionFunctionConfig unCloseSessionFunctionConfig = UnCloseSessionFunctionConfig.load(context.getUserConfigMap());
@@ -55,10 +55,13 @@ public class UnCloseSessionFunction implements Function<byte[], Void> {
         Map<String, Object> paramMap = new HashMap<>();
         paramMap.put("qimoor", unCloseSessionFunctionConfig.getCollectQimoor());
         paramMap.put("_id", qiMoorWebChat.get_id());
-        HikariDataSource dataSource = new HikariDataSource();
-        dataSource.setJdbcUrl(unCloseSessionFunctionConfig.getJdbcUrl());
-        dataSource.setUsername(unCloseSessionFunctionConfig.getUserName());
-        dataSource.setPassword(unCloseSessionFunctionConfig.getPassword());
+        if (dataSource == null) {
+            log.info("[UnCloseSessionFunction ]初始化 DataSource ... ");
+            dataSource = new HikariDataSource();
+            dataSource.setJdbcUrl(unCloseSessionFunctionConfig.getJdbcUrl());
+            dataSource.setUsername(unCloseSessionFunctionConfig.getUserName());
+            dataSource.setPassword(unCloseSessionFunctionConfig.getPassword());
+        }
         JsonObject jsonObject = null;
         int maxRetryTimes = unCloseSessionFunctionConfig.getMaxRetryTimes();
         // 调用七陌查询会话是否完成

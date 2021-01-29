@@ -47,6 +47,7 @@ import static com.boxuegu.basis.pulsar.qimoor.utils.UrlParsingUtils.*;
 public class QiMoorSourceFunction implements Function<byte[], Void> {
 
     final Gson gson = GsonBuilderUtil.create(false);
+    HikariDataSource dataSource = null;
     @Override
     public Void process(byte[] input, Context context) {
         QiMoorSourceFunctionConfig qiMoorSourceFunctionConfig = QiMoorSourceFunctionConfig.load(context.getUserConfigMap());
@@ -63,11 +64,13 @@ public class QiMoorSourceFunction implements Function<byte[], Void> {
         properties.put("ACTION", "INSERT");
         properties.put("TARGET", qiMoorSourceFunctionConfig.getTableName());
         properties.put("SQLMODE", "INSERT_IGNORE_INVALID");
-        HikariDataSource dataSource = new HikariDataSource();
-        dataSource.setJdbcUrl(qiMoorSourceFunctionConfig.getJdbcUrl());
-        dataSource.setUsername(qiMoorSourceFunctionConfig.getUserName());
-        dataSource.setPassword(qiMoorSourceFunctionConfig.getPassword());
-
+        if (dataSource == null) {
+            log.info("[QimoorSourceFunction ] 初始化 DataSource ... ");
+            dataSource = new HikariDataSource();
+            dataSource.setJdbcUrl(qiMoorSourceFunctionConfig.getJdbcUrl());
+            dataSource.setUsername(qiMoorSourceFunctionConfig.getUserName());
+            dataSource.setPassword(qiMoorSourceFunctionConfig.getPassword());
+        }
 
         if (!qiMoorWebChat.getStatus().equalsIgnoreCase("finish") && !qiMoorWebChat.getStatus().equalsIgnoreCase("invalid")) {
             // unclose session delayed 3Min send
