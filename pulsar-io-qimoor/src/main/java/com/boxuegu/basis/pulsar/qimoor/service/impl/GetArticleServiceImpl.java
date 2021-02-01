@@ -29,7 +29,7 @@ public class GetArticleServiceImpl implements GetObjectService {
         } finally {
             closeSession(connection, row, preparedStatement);
         }
-        log.info(" remoteCourse entity is {}", new Gson().toJson(remoteArticle));
+//        log.info(" remoteCourse entity is {}", new Gson().toJson(remoteArticle));
         return remoteArticle;
     }
 
