@@ -15,6 +15,7 @@
         <module>pulsar-io-zhugeio</module>
         <module>pulsar-io-qimoor</module>
         <module>pulsar-io-binlog</module>
+        <module>pulsar-io-flink</module>
     </modules>
 
     <properties>
