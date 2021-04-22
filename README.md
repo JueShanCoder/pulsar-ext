@@ -1,6 +1,6 @@
 # Pulsar BXG
 
-博学谷Pulsar中间件扩展项目。
+以Pulsar为中间件搭建的数据仓库项目
 
 ## Modules
 
