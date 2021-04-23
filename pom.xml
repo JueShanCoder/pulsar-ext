@@ -16,6 +16,7 @@
         <module>pulsar-io-qimoor</module>
         <module>pulsar-io-binlog</module>
         <module>pulsar-io-flink</module>
+        <module>flink-recommend</module>
     </modules>
 
     <properties>

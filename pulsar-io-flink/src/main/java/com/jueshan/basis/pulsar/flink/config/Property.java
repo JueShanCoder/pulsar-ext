@@ -17,6 +17,7 @@ public class Property {
     static {
         InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(CONF_NAME);
         contextProperties = new Properties();
+        assert in != null;
         InputStreamReader inputStream = new InputStreamReader(in, StandardCharsets.UTF_8);
         try {
             contextProperties.load(inputStream);
