@@ -9,8 +9,8 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>flink-recommend</artifactId>
-    <name>Flink : recommend</name>
+    <artifactId>flink-exercise</artifactId>
+    <name>Flink : Exercise</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -22,8 +22,6 @@
         <pulsar-flink-connector.version>2.7.6</pulsar-flink-connector.version>
         <!--Scala 版本-->
         <scala.binary.version>2.12</scala.binary.version>
-        <!-- Hbase 版本 -->
-        <hbase.version>1.2.12</hbase.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
     </properties>
@@ -66,16 +64,6 @@
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-connector-kafka_${scala.binary.version}</artifactId>
             <version>${flink.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.hbase</groupId>
-            <artifactId>hbase-client</artifactId>
-            <version>${hbase.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.hbase</groupId>
-            <artifactId>hbase-server</artifactId>
-            <version>${hbase.version}</version>
         </dependency>
     </dependencies>
 </project>
